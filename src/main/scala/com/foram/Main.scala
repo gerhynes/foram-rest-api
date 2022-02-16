@@ -1,32 +1,96 @@
 package com.foram
 
-import akka.actor.typed.ActorSystem
-import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
-import scala.io.StdIn
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+import akka.stream.ActorMaterializer
+import spray.json.DefaultJsonProtocol._
+import akka.util.Timeout
+import akka.pattern.ask
 
-object Main {
-  def main(args: Array[String]): Unit = {
+import scala.concurrent.Future
+import scala.concurrent.duration._
 
-    implicit val system = ActorSystem(Behaviors.empty, "foramSystem")
-    // needed for the future flatMap/onComplete in the end
-    implicit val executionContext = system.executionContext
+import spray.json._
 
-    val route =
-      path("categories") {
-        get {
-          complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>Hello from Foram!</h1>"))
+case class Category(name: String, description: String)
+
+object CategoryDB {
+  case class CreateCategory(category: Category)
+
+  case class CategoryCreated(id: Int)
+
+  case class FindCategory(id: Int)
+
+  case object FindAllCategories
+}
+
+class CategoryDB extends Actor with ActorLogging {
+
+  import CategoryDB._
+
+  var categories: Map[Int, Category] = Map()
+  var currentCategoryId: Int = 0
+
+  override def receive: Receive = {
+    case FindAllCategories =>
+      log.info(s"Searching for categories")
+      sender() ! categories.values.toList
+
+    case FindCategory(id) =>
+      log.info(s"Finding category by id: $id")
+      sender() ! categories.get(id)
+
+    case CreateCategory(category) =>
+      log.info(s"Adding category $category with id $currentCategoryId")
+      categories = categories + (currentCategoryId -> category)
+      sender() ! CategoryCreated(currentCategoryId)
+      currentCategoryId += 1
+  }
+}
+
+trait CategoryJsonProtocol extends DefaultJsonProtocol {
+  implicit val categoryFormat = jsonFormat2(Category)
+}
+
+object Main extends App with CategoryJsonProtocol {
+  implicit val system = ActorSystem("foramSystem")
+  implicit val materializer = ActorMaterializer()
+
+  import system.dispatcher
+  import CategoryDB._
+
+  val categoryDb = system.actorOf(Props[CategoryDB], "categoryDB")
+  val categoryList = List(
+    Category("JavaScript", "Ask questions and share tips about JavaScript"),
+    Category("Java", "Ask questions and share tips about Java"),
+    Category("Scala", "Ask questions and share tips about Scala")
+  )
+
+  categoryList.foreach { category =>
+    categoryDb ! CreateCategory(category)
+  }
+
+  implicit val timeout = Timeout(2 seconds)
+
+  val route =
+    path("api" / "categories") {
+      get {
+        val categoriesFuture: Future[List[Category]] = (categoryDb ? FindAllCategories).mapTo[List[Category]]
+        val entityFuture = categoriesFuture.map { categories =>
+          HttpEntity(
+            ContentTypes.`application/json`,
+            categories.toJson.prettyPrint
+          )
         }
+        complete(entityFuture)
       }
-
-    val bindingFuture = Http().newServerAt("localhost", 8080).bind(route)
-
-    println(s"Server now online at http://localhost:8080/categories\nPress RETURN to stop server")
-    StdIn.readLine() // let server run until user presses return
-    bindingFuture
-      .flatMap(_.unbind()) // trigger unbinding from the port
-      .onComplete(_ => system.terminate()) // and shutdown when done
     }
+
+  val bindingFuture = Http().newServerAt("localhost", 8080).bind(route)
+
+  println(s"Server now online at http://localhost:8080")
 }
