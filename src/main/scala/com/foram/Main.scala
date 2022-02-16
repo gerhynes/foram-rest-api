@@ -76,8 +76,20 @@ object Main extends App with CategoryJsonProtocol {
 
   implicit val timeout = Timeout(2 seconds)
 
-  val route =
+  val routes =
     path("api" / "categories") {
+      parameter('id.as[Int]) { categoryId =>
+        get {
+          val categoryFuture: Future[Option[Category]] = (categoryDb ? FindCategory(categoryId)).mapTo[Option[Category]]
+          val entityFuture = categoryFuture.map { categoryOption =>
+            HttpEntity(
+              ContentTypes.`application/json`,
+              categoryOption.toJson.prettyPrint
+            )
+          }
+          complete(entityFuture)
+        }
+      } ~
       get {
         val categoriesFuture: Future[List[Category]] = (categoryDb ? FindAllCategories).mapTo[List[Category]]
         val entityFuture = categoriesFuture.map { categories =>
@@ -88,9 +100,21 @@ object Main extends App with CategoryJsonProtocol {
         }
         complete(entityFuture)
       }
-    }
+    } ~
+      path("api" / "categories" / IntNumber) { categoryId =>
+        get {
+          val categoryFuture: Future[Option[Category]] = (categoryDb ? FindCategory(categoryId)).mapTo[Option[Category]]
+          val entityFuture = categoryFuture.map { categoryOption =>
+            HttpEntity(
+              ContentTypes.`application/json`,
+              categoryOption.toJson.prettyPrint
+            )
+          }
+          complete(entityFuture)
+        }
+      }
 
-  val bindingFuture = Http().newServerAt("localhost", 8080).bind(route)
+  val bindingFuture = Http().newServerAt("localhost", 8080).bind(routes)
 
   println(s"Server now online at http://localhost:8080")
 }
