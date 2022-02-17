@@ -6,6 +6,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
 import akka.stream.ActorMaterializer
 import spray.json.DefaultJsonProtocol._
 import akka.util.Timeout
@@ -13,42 +14,41 @@ import akka.pattern.ask
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-
 import spray.json._
 
 case class Category(name: String, description: String)
 
 object CategoryDB {
-  case class CreateCategory(category: Category)
-
-  case class CategoryCreated(id: Int)
-
-  case class FindCategory(id: Int)
-
-  case object FindAllCategories
+  case object GetAllCategories
+  case class GetCategory(name: String)
+  case class AddCategory(category: Category)
+  case class RemoveCategory(category: Category)
+  case object OperationSuccess
 }
 
 class CategoryDB extends Actor with ActorLogging {
-
   import CategoryDB._
 
-  var categories: Map[Int, Category] = Map()
-  var currentCategoryId: Int = 0
+  var categories: Map[String, Category] = Map()
 
   override def receive: Receive = {
-    case FindAllCategories =>
+    case GetAllCategories =>
       log.info(s"Searching for categories")
       sender() ! categories.values.toList
 
-    case FindCategory(id) =>
-      log.info(s"Finding category by id: $id")
-      sender() ! categories.get(id)
+    case GetCategory(name) =>
+      log.info(s"Finding category with name: $name")
+      sender() ! categories.get(name)
 
-    case CreateCategory(category) =>
-      log.info(s"Adding category $category with id $currentCategoryId")
-      categories = categories + (currentCategoryId -> category)
-      sender() ! CategoryCreated(currentCategoryId)
-      currentCategoryId += 1
+    case AddCategory(category) =>
+      log.info(s"Adding category $category")
+      categories = categories + (category.name -> category)
+      sender() ! OperationSuccess
+
+    case RemoveCategory(category) =>
+      log.info(s"Removing category $category")
+      categories = categories - category.name
+      sender() ! OperationSuccess
   }
 }
 
@@ -71,48 +71,33 @@ object Main extends App with CategoryJsonProtocol {
   )
 
   categoryList.foreach { category =>
-    categoryDb ! CreateCategory(category)
+    categoryDb ! AddCategory(category)
   }
 
   implicit val timeout = Timeout(2 seconds)
 
   val routes =
-    path("api" / "categories") {
-      parameter('id.as[Int]) { categoryId =>
-        get {
-          val categoryFuture: Future[Option[Category]] = (categoryDb ? FindCategory(categoryId)).mapTo[Option[Category]]
-          val entityFuture = categoryFuture.map { categoryOption =>
-            HttpEntity(
-              ContentTypes.`application/json`,
-              categoryOption.toJson.prettyPrint
-            )
-          }
-          complete(entityFuture)
-        }
-      } ~
+    pathPrefix("api" / "categories") {
       get {
-        val categoriesFuture: Future[List[Category]] = (categoryDb ? FindAllCategories).mapTo[List[Category]]
-        val entityFuture = categoriesFuture.map { categories =>
-          HttpEntity(
-            ContentTypes.`application/json`,
-            categories.toJson.prettyPrint
-          )
-        }
-        complete(entityFuture)
-      }
-    } ~
-      path("api" / "categories" / IntNumber) { categoryId =>
-        get {
-          val categoryFuture: Future[Option[Category]] = (categoryDb ? FindCategory(categoryId)).mapTo[Option[Category]]
-          val entityFuture = categoryFuture.map { categoryOption =>
-            HttpEntity(
-              ContentTypes.`application/json`,
-              categoryOption.toJson.prettyPrint
-            )
+        (path(Segment) | parameter('name)) { name =>
+          val categoryOptionFuture: Future[Option[Category]] = (categoryDb ? GetCategory(name)).mapTo[Option[Category]]
+          complete(categoryOptionFuture)
+        } ~
+          pathEndOrSingleSlash {
+            complete((categoryDb ? GetAllCategories).mapTo[List[Category]])
           }
-          complete(entityFuture)
+      } ~
+        post {
+          entity(as[Category]) { category =>
+            complete((categoryDb ? AddCategory(category)).map(_ => StatusCodes.OK))
+          }
+        } ~
+        delete {
+          entity(as[Category]) { category =>
+            complete((categoryDb ? RemoveCategory(category)).map(_ => StatusCodes.OK))
+          }
         }
-      }
+    }
 
   val bindingFuture = Http().newServerAt("localhost", 8080).bind(routes)
 
