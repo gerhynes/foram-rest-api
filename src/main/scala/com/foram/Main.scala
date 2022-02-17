@@ -11,6 +11,7 @@ import akka.stream.ActorMaterializer
 import spray.json.DefaultJsonProtocol._
 import akka.util.Timeout
 import akka.pattern.ask
+import scala.collection.mutable.Map
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -22,6 +23,7 @@ object CategoryDB {
   case object GetAllCategories
   case class GetCategory(name: String)
   case class AddCategory(category: Category)
+  case class UpdateCategory(name: String, category: Category)
   case class RemoveCategory(category: Category)
   case object OperationSuccess
 }
@@ -43,6 +45,11 @@ class CategoryDB extends Actor with ActorLogging {
     case AddCategory(category) =>
       log.info(s"Adding category $category")
       categories = categories + (category.name -> category)
+      sender() ! OperationSuccess
+
+    case UpdateCategory(name, category) =>
+      log.info(s"Updating category $category")
+      categories = categories + (name -> category)
       sender() ! OperationSuccess
 
     case RemoveCategory(category) =>
@@ -76,7 +83,7 @@ object Main extends App with CategoryJsonProtocol {
 
   implicit val timeout = Timeout(2 seconds)
 
-  val routes =
+  val categoriesRoutes =
     pathPrefix("api" / "categories") {
       get {
         (path(Segment) | parameter('name)) { name =>
@@ -92,6 +99,13 @@ object Main extends App with CategoryJsonProtocol {
             complete((categoryDb ? AddCategory(category)).map(_ => StatusCodes.OK))
           }
         } ~
+        put {
+          (path(Segment) | parameter('name)) { name =>
+            entity(as[Category]) { category =>
+              complete((categoryDb ? UpdateCategory(name, category)).map(_ => StatusCodes.OK))
+            }
+          }
+        } ~
         delete {
           entity(as[Category]) { category =>
             complete((categoryDb ? RemoveCategory(category)).map(_ => StatusCodes.OK))
@@ -99,7 +113,7 @@ object Main extends App with CategoryJsonProtocol {
         }
     }
 
-  val bindingFuture = Http().newServerAt("localhost", 8080).bind(routes)
+  val bindingFuture = Http().newServerAt("localhost", 8080).bind(categoriesRoutes)
 
   println(s"Server now online at http://localhost:8080")
 }
