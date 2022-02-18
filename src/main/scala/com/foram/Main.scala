@@ -22,6 +22,8 @@ case class Topic(id: Int, title: String, user_id: Int, category_id: Int)
 
 case class User(id: Int, name: String, username: String, email: String)
 
+case class Post(id: Int, user_id: Int, topic_id: Int, post_number: Int, content: String)
+
 object CategoryDB {
   case object GetAllCategories
 
@@ -60,6 +62,20 @@ object UserDB {
   case class UpdateUser(id: Int, user: User)
 
   case class RemoveUser(user: User)
+
+  case object OperationSuccess
+}
+
+object PostDB {
+  case object GetAllPosts
+
+  case class GetPost(id: Int)
+
+  case class AddPost(post: Post)
+
+  case class UpdatePost(id: Int, post: Post)
+
+  case class RemovePost(post: Post)
 
   case object OperationSuccess
 }
@@ -160,10 +176,42 @@ class UserDB extends Actor with ActorLogging {
   }
 }
 
+class PostDB extends Actor with ActorLogging {
+  import PostDB._
+
+  var posts: Map[Int, Post] = Map()
+
+  override def receive: Receive = {
+    case GetAllPosts =>
+      log.info(s"Searching for posts")
+      sender() ! posts.values.toList
+
+    case GetPost(id) =>
+      log.info(s"Finding post with id: $id")
+      sender() ! posts.get(id)
+
+    case AddPost(post) =>
+      log.info(s"Adding post $post")
+      posts = posts + (post.id -> post)
+      sender() ! OperationSuccess
+
+    case UpdatePost(id, post) =>
+      log.info(s"Updating post with id: $id")
+      posts = posts + (id -> post)
+      sender() ! OperationSuccess
+
+    case RemovePost(post) =>
+      log.info(s"Removing post $post")
+      posts = posts - post.id
+      sender() ! OperationSuccess
+  }
+}
+
 trait CustomJsonProtocol extends DefaultJsonProtocol {
   implicit val categoryFormat = jsonFormat4(Category)
   implicit val topicFormat = jsonFormat4(Topic)
   implicit val userFormat = jsonFormat4(User)
+  implicit val postFormat = jsonFormat5(Post)
 }
 
 object Main extends App with CustomJsonProtocol {
@@ -174,10 +222,12 @@ object Main extends App with CustomJsonProtocol {
   import CategoryDB._
   import TopicDB._
   import UserDB._
+  import PostDB._
 
   val categoryDb = system.actorOf(Props[CategoryDB], "categoryDB")
   val topicDb = system.actorOf(Props[TopicDB], "topicDB")
   val userDb = system.actorOf(Props[UserDB], "userDB")
+  val postDb = system.actorOf(Props[PostDB], "postDB")
 
   val categoryList = List(
     Category(1, "JavaScript", 1, "Ask questions and share tips about JavaScript"),
@@ -197,6 +247,18 @@ object Main extends App with CustomJsonProtocol {
     User(3, "Naz Mahmood", "naziyah", "nazmahmood@example.com")
   )
 
+  val postList = List(
+    Post(1, 1, 1, 1, "Lorem ipsum dolor sit amet, consectetur adipiscing elit"),
+    Post(2, 2, 1, 2, "Nam tempus metus non dui sollicitudin efficitur vel id mauris"),
+    Post(3, 3, 1, 3, "Fusce tristique justo eu porta aliquet"),
+    Post(4, 1, 2, 1, "Aenean placerat magna quis sollicitudin aliquet"),
+    Post(5, 2, 2, 2, "Quisque sed tellus sapien"),
+    Post(6, 3, 2, 3, "Nullam ullamcorper tempor mi vel ornare"),
+    Post(7, 1, 3, 1, "Quisque auctor nisi eget consectetur consequat"),
+    Post(8, 2, 3, 2, "Integer aliquam turpis id mi porttitor pellentesque"),
+    Post(9, 3, 3, 3, "Fusce vel molestie neque, in pharetra nisl")
+  )
+
   categoryList.foreach { category =>
     categoryDb ! AddCategory(category)
   }
@@ -207,6 +269,10 @@ object Main extends App with CustomJsonProtocol {
 
   userList.foreach { user =>
     userDb ! AddUser(user)
+  }
+
+  postList.foreach { post =>
+    postDb ! AddPost(post)
   }
 
   implicit val timeout = Timeout(2 seconds)
@@ -301,7 +367,38 @@ object Main extends App with CustomJsonProtocol {
         }
     }
 
-  val routes = categoriesRoutes ~ topicsRoutes ~ usersRoutes
+  val postsRoutes =
+    pathPrefix("api" / "posts") {
+      get {
+        (path(IntNumber) | parameter('id.as[Int])) { id =>
+          val postOptionFuture: Future[Option[Post]] = (postDb ? GetPost(id)).mapTo[Option[Post]]
+          complete(postOptionFuture)
+        } ~
+          pathEndOrSingleSlash {
+            complete((postDb ? GetAllPosts).mapTo[List[Post]])
+          }
+      } ~
+        post {
+          entity(as[Post]) { post =>
+            complete((postDb ? AddPost(post)).map(_ => StatusCodes.OK))
+          }
+        } ~
+        put {
+          (path(IntNumber) | parameter('id.as[Int])) { id =>
+            entity(as[Post]) { post =>
+              complete((postDb ? UpdatePost(id, post)).map(_ => StatusCodes.OK))
+            }
+          }
+        } ~
+        delete {
+          entity(as[Post]) { post =>
+            complete((postDb ? RemovePost(post)).map(_ => StatusCodes.OK))
+          }
+        }
+    }
+
+  // Concat routes
+  val routes = categoriesRoutes ~ topicsRoutes ~ usersRoutes ~ postsRoutes
 
   val bindingFuture = Http().newServerAt("localhost", 8080).bind(routes)
 
