@@ -16,18 +16,40 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import spray.json._
 
-case class Category(id: Int, name: String, description: String)
+case class Category(id: Int, name: String, user_id: Int, description: String)
+
+case class Topic(id: Int, title: String, user_id: Int, category_id: Int)
 
 object CategoryDB {
   case object GetAllCategories
+
   case class GetCategory(id: Int)
+
   case class AddCategory(category: Category)
+
   case class UpdateCategory(id: Int, category: Category)
+
   case class RemoveCategory(category: Category)
+
+  case object OperationSuccess
+}
+
+object TopicDB {
+  case object GetAllTopics
+
+  case class GetTopic(id: Int)
+
+  case class AddTopic(topic: Topic)
+
+  case class UpdateTopic(id: Int, topic: Topic)
+
+  case class RemoveTopic(topic: Topic)
+
   case object OperationSuccess
 }
 
 class CategoryDB extends Actor with ActorLogging {
+
   import CategoryDB._
 
   var categories: Map[Int, Category] = Map()
@@ -58,26 +80,72 @@ class CategoryDB extends Actor with ActorLogging {
   }
 }
 
-trait CategoryJsonProtocol extends DefaultJsonProtocol {
-  implicit val categoryFormat = jsonFormat3(Category)
+class TopicDB extends Actor with ActorLogging {
+
+  import TopicDB._
+
+  var topics: Map[Int, Topic] = Map()
+
+  override def receive: Receive = {
+    case GetAllTopics =>
+      log.info(s"Searching for topics")
+      sender() ! topics.values.toList
+
+    case GetTopic(id) =>
+      log.info(s"Finding topic with name: $id")
+      sender() ! topics.get(id)
+
+    case AddTopic(topic) =>
+      log.info(s"Adding topic $topic")
+      topics = topics + (topic.id -> topic)
+      sender() ! OperationSuccess
+
+    case UpdateTopic(id, topic) =>
+      log.info(s"Updating topic $topic")
+      topics = topics + (id -> topic)
+      sender() ! OperationSuccess
+
+    case RemoveTopic(topic) =>
+      log.info(s"Removing topic $topic")
+      topics = topics - topic.id
+      sender() ! OperationSuccess
+  }
 }
 
-object Main extends App with CategoryJsonProtocol {
+trait CustomJsonProtocol extends DefaultJsonProtocol {
+  implicit val categoryFormat = jsonFormat4(Category)
+  implicit val topicFormat = jsonFormat4(Topic)
+}
+
+object Main extends App with CustomJsonProtocol {
   implicit val system = ActorSystem("foramSystem")
   implicit val materializer = ActorMaterializer()
 
   import system.dispatcher
   import CategoryDB._
+  import TopicDB._
 
   val categoryDb = system.actorOf(Props[CategoryDB], "categoryDB")
+  val topicDb = system.actorOf(Props[TopicDB], "topicDB")
+
   val categoryList = List(
-    Category(1, "JavaScript", "Ask questions and share tips about JavaScript"),
-    Category(2, "Java", "Ask questions and share tips about Java"),
-    Category(3, "Scala", "Ask questions and share tips about Scala")
+    Category(1, "JavaScript", 1, "Ask questions and share tips about JavaScript"),
+    Category(2, "Java", 2, "Ask questions and share tips about Java"),
+    Category(3, "Scala", 3, "Ask questions and share tips about Scala")
+  )
+
+  val topicList = List(
+    Topic(1, "I have a question about React", 1, 1),
+    Topic(2, "I have a question about Spring Boot", 1, 2),
+    Topic(3, "I have a question about Akka", 1, 3)
   )
 
   categoryList.foreach { category =>
     categoryDb ! AddCategory(category)
+  }
+
+  topicList.foreach { topic =>
+    topicDb ! AddTopic(topic)
   }
 
   implicit val timeout = Timeout(2 seconds)
@@ -112,7 +180,39 @@ object Main extends App with CategoryJsonProtocol {
         }
     }
 
-  val bindingFuture = Http().newServerAt("localhost", 8080).bind(categoriesRoutes)
+  val topicsRoutes =
+    pathPrefix("api" / "topics") {
+      get {
+        (path(IntNumber) | parameter('id.as[Int])) { id =>
+          val topicOptionFuture: Future[Option[Topic]] = (topicDb ? GetTopic(id)).mapTo[Option[Topic]]
+          complete(topicOptionFuture)
+        } ~
+          pathEndOrSingleSlash {
+            complete((topicDb ? GetAllTopics).mapTo[List[Topic]])
+          }
+      } ~
+        post {
+          entity(as[Topic]) { topic =>
+            complete((topicDb ? AddTopic(topic)).map(_ => StatusCodes.OK))
+          }
+        } ~
+        put {
+          (path(IntNumber) | parameter('id.as[Int])) { id =>
+            entity(as[Topic]) { topic =>
+              complete((topicDb ? UpdateTopic(id, topic)).map(_ => StatusCodes.OK))
+            }
+          }
+        } ~
+        delete {
+          entity(as[Topic]) { topic =>
+            complete((topicDb ? RemoveTopic(topic)).map(_ => StatusCodes.OK))
+          }
+        }
+    }
+
+  val routes = categoriesRoutes ~ topicsRoutes
+
+  val bindingFuture = Http().newServerAt("localhost", 8080).bind(routes)
 
   println(s"Server now online at http://localhost:8080")
 }
