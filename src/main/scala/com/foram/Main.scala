@@ -20,6 +20,8 @@ case class Category(id: Int, name: String, user_id: Int, description: String)
 
 case class Topic(id: Int, title: String, user_id: Int, category_id: Int)
 
+case class User(id: Int, name: String, username: String, email: String)
+
 object CategoryDB {
   case object GetAllCategories
 
@@ -48,6 +50,20 @@ object TopicDB {
   case object OperationSuccess
 }
 
+object UserDB {
+  case object GetAllUsers
+
+  case class GetUser(id: Int)
+
+  case class AddUser(user: User)
+
+  case class UpdateUser(id: Int, user: User)
+
+  case class RemoveUser(user: User)
+
+  case object OperationSuccess
+}
+
 class CategoryDB extends Actor with ActorLogging {
 
   import CategoryDB._
@@ -60,7 +76,7 @@ class CategoryDB extends Actor with ActorLogging {
       sender() ! categories.values.toList
 
     case GetCategory(id) =>
-      log.info(s"Finding category with name: $id")
+      log.info(s"Finding category with id: $id")
       sender() ! categories.get(id)
 
     case AddCategory(category) =>
@@ -92,7 +108,7 @@ class TopicDB extends Actor with ActorLogging {
       sender() ! topics.values.toList
 
     case GetTopic(id) =>
-      log.info(s"Finding topic with name: $id")
+      log.info(s"Finding topic with id: $id")
       sender() ! topics.get(id)
 
     case AddTopic(topic) =>
@@ -112,9 +128,42 @@ class TopicDB extends Actor with ActorLogging {
   }
 }
 
+class UserDB extends Actor with ActorLogging {
+
+  import UserDB._
+
+  var users: Map[Int, User] = Map()
+
+  override def receive: Receive = {
+    case GetAllUsers =>
+      log.info(s"Searching for users")
+      sender() ! users.values.toList
+
+    case GetUser(id) =>
+      log.info(s"Finding user with id: $id")
+      sender() ! users.get(id)
+
+    case AddUser(user) =>
+      log.info(s"Adding user $user")
+      users = users + (user.id -> user)
+      sender() ! OperationSuccess
+
+    case UpdateUser(id, user) =>
+      log.info(s"Updating user with id: $id")
+      users = users + (id -> user)
+      sender() ! OperationSuccess
+
+    case RemoveUser(user) =>
+      log.info(s"Removing user $user")
+      users = users - user.id
+      sender() ! OperationSuccess
+  }
+}
+
 trait CustomJsonProtocol extends DefaultJsonProtocol {
   implicit val categoryFormat = jsonFormat4(Category)
   implicit val topicFormat = jsonFormat4(Topic)
+  implicit val userFormat = jsonFormat4(User)
 }
 
 object Main extends App with CustomJsonProtocol {
@@ -124,9 +173,11 @@ object Main extends App with CustomJsonProtocol {
   import system.dispatcher
   import CategoryDB._
   import TopicDB._
+  import UserDB._
 
   val categoryDb = system.actorOf(Props[CategoryDB], "categoryDB")
   val topicDb = system.actorOf(Props[TopicDB], "topicDB")
+  val userDb = system.actorOf(Props[UserDB], "userDB")
 
   val categoryList = List(
     Category(1, "JavaScript", 1, "Ask questions and share tips about JavaScript"),
@@ -140,12 +191,22 @@ object Main extends App with CustomJsonProtocol {
     Topic(3, "I have a question about Akka", 1, 3)
   )
 
+  val userList = List(
+    User(1, "Quincy Lars", "quince", "qlars@example.com"),
+    User(2, "Beatriz Stephanie", "beetz", "beetz@example.com"),
+    User(3, "Naz Mahmood", "naziyah", "nazmahmood@example.com")
+  )
+
   categoryList.foreach { category =>
     categoryDb ! AddCategory(category)
   }
 
   topicList.foreach { topic =>
     topicDb ! AddTopic(topic)
+  }
+
+  userList.foreach { user =>
+    userDb ! AddUser(user)
   }
 
   implicit val timeout = Timeout(2 seconds)
@@ -210,7 +271,37 @@ object Main extends App with CustomJsonProtocol {
         }
     }
 
-  val routes = categoriesRoutes ~ topicsRoutes
+  val usersRoutes =
+    pathPrefix("api" / "users") {
+      get {
+        (path(IntNumber) | parameter('id.as[Int])) { id =>
+          val userOptionFuture: Future[Option[User]] = (userDb ? GetUser(id)).mapTo[Option[User]]
+          complete(userOptionFuture)
+        } ~
+          pathEndOrSingleSlash {
+            complete((userDb ? GetAllUsers).mapTo[List[User]])
+          }
+      } ~
+        post {
+          entity(as[User]) { user =>
+            complete((userDb ? AddUser(user)).map(_ => StatusCodes.OK))
+          }
+        } ~
+        put {
+          (path(IntNumber) | parameter('id.as[Int])) { id =>
+            entity(as[User]) { user =>
+              complete((userDb ? UpdateUser(id, user)).map(_ => StatusCodes.OK))
+            }
+          }
+        } ~
+        delete {
+          entity(as[User]) { user =>
+            complete((userDb ? RemoveUser(user)).map(_ => StatusCodes.OK))
+          }
+        }
+    }
+
+  val routes = categoriesRoutes ~ topicsRoutes ~ usersRoutes
 
   val bindingFuture = Http().newServerAt("localhost", 8080).bind(routes)
 
