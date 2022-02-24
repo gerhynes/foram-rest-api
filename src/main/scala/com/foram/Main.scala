@@ -23,6 +23,7 @@ object Main extends App {
   val userDB = system.actorOf(Props[UserDB], "userDB")
   val postDB = system.actorOf(Props[PostDB], "postDB")
 
+  // Hardcode values until database is connected
   val categoryList = List(
     Category(1, "JavaScript", 1, "Ask questions and share tips about JavaScript"),
     Category(2, "Java", 2, "Ask questions and share tips about Java"),
@@ -52,6 +53,7 @@ object Main extends App {
     Post(8, 2, 3, 2, "Integer aliquam turpis id mi porttitor pellentesque"),
     Post(9, 3, 3, 3, "Fusce vel molestie neque, in pharetra nisl")
   )
+
 
   categoryList.foreach { category =>
     categoryDB ! AddCategory(category)

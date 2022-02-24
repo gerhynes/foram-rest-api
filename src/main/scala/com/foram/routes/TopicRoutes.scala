@@ -8,13 +8,12 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import spray.json.DefaultJsonProtocol._
 import akka.util.Timeout
 import akka.pattern.ask
-
-import com.foram.Main.topicDB
-import com.foram.actors.Topic
+import com.foram.Main.{postDB, topicDB}
+import com.foram.actors.{Post, Topic}
 import com.foram.actors.TopicDB._
+import com.foram.actors.PostDB._
 
 import scala.concurrent.duration._
-import scala.concurrent.Future
 
 class TopicRoutes {
 
@@ -25,10 +24,12 @@ class TopicRoutes {
   val topicRoutes =
     pathPrefix("api" / "topics") {
       get {
-        (path(IntNumber) | parameter('id.as[Int])) { id =>
-          val topicOptionFuture: Future[Option[Topic]] = (topicDB ? GetTopic(id)).mapTo[Option[Topic]]
-          complete(topicOptionFuture)
+        path(IntNumber / "posts") { topic_id =>
+          complete((postDB ? GetPostsByTopic(topic_id)).mapTo[List[Post]])
         } ~
+          path(IntNumber) { id =>
+            complete((topicDB ? GetTopic(id)).mapTo[Option[Topic]])
+          } ~
           pathEndOrSingleSlash {
             complete((topicDB ? GetAllTopics).mapTo[List[Topic]])
           }
@@ -39,7 +40,7 @@ class TopicRoutes {
           }
         } ~
         put {
-          (path(IntNumber) | parameter('id.as[Int])) { id =>
+          path(IntNumber) { id =>
             entity(as[Topic]) { topic =>
               complete((topicDB ? UpdateTopic(id, topic)).map(_ => StatusCodes.OK))
             }

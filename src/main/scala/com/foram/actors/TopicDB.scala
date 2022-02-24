@@ -9,6 +9,10 @@ object TopicDB {
 
   case class GetTopic(id: Int)
 
+  case class GetTopicsByCategory(category_id: Int)
+
+  case class GetTopicsByUser(user_id: Int)
+
   case class AddTopic(topic: Topic)
 
   case class UpdateTopic(id: Int, topic: Topic)
@@ -32,6 +36,14 @@ class TopicDB extends Actor with ActorLogging {
     case GetTopic(id) =>
       log.info(s"Finding topic with id: $id")
       sender() ! topics.get(id)
+
+    case GetTopicsByCategory(category_id) =>
+      log.info(s"Finding topics for category with id: $category_id")
+      sender() ! topics.values.toList.filter(x => x.category_id == category_id)
+
+    case GetTopicsByUser(user_id) =>
+      log.info(s"Finding topics for user with id: $user_id")
+      sender() ! topics.values.toList.filter(x => x.user_id == user_id)
 
     case AddTopic(topic) =>
       log.info(s"Adding topic $topic")

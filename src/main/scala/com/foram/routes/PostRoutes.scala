@@ -11,8 +11,6 @@ import akka.pattern.ask
 import com.foram.Main.postDB
 import com.foram.actors.Post
 import com.foram.actors.PostDB._
-
-import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class PostRoutes {
@@ -25,8 +23,7 @@ class PostRoutes {
     pathPrefix("api" / "posts") {
       get {
         (path(IntNumber) | parameter('id.as[Int])) { id =>
-          val postOptionFuture: Future[Option[Post]] = (postDB ? GetPost(id)).mapTo[Option[Post]]
-          complete(postOptionFuture)
+          complete((postDB ? GetPost(id)).mapTo[Option[Post]])
         } ~
           pathEndOrSingleSlash {
             complete((postDB ? GetAllPosts).mapTo[List[Post]])

@@ -13,7 +13,6 @@ import com.foram.actors.User
 import com.foram.actors.UserDB._
 
 import scala.concurrent.duration._
-import scala.concurrent.Future
 
 class UserRoutes {
 
@@ -25,8 +24,7 @@ class UserRoutes {
     pathPrefix("api" / "users") {
       get {
         (path(IntNumber) | parameter('id.as[Int])) { id =>
-          val userOptionFuture: Future[Option[User]] = (userDB ? GetUser(id)).mapTo[Option[User]]
-          complete(userOptionFuture)
+          complete((userDB ? GetUser(id)).mapTo[Option[User]])
         } ~
           pathEndOrSingleSlash {
             complete((userDB ? GetAllUsers).mapTo[List[User]])

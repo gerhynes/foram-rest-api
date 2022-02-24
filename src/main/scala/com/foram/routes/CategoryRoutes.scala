@@ -8,11 +8,11 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import spray.json.DefaultJsonProtocol._
 import akka.util.Timeout
 import akka.pattern.ask
-import com.foram.actors.Category
+import com.foram.actors.{Category, Topic}
 import com.foram.actors.CategoryDB._
-import com.foram.Main.categoryDB
+import com.foram.Main.{categoryDB, topicDB}
+import com.foram.actors.TopicDB._
 
-import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class CategoryRoutes {
@@ -24,10 +24,14 @@ class CategoryRoutes {
   val categoryRoutes =
     pathPrefix("api" / "categories") {
       get {
-        (path(IntNumber) | parameter('id.as[Int])) { id =>
-          val categoryOptionFuture: Future[Option[Category]] = (categoryDB ? GetCategory(id)).mapTo[Option[Category]]
-          complete(categoryOptionFuture)
+        pathPrefix(Segment) { slug =>
+          pathSuffix(IntNumber) { category_id =>
+            complete((topicDB ? GetTopicsByCategory(category_id)).mapTo[List[Topic]])
+          }
         } ~
+          path(IntNumber) { id =>
+            complete((categoryDB ? GetCategory(id)).mapTo[Option[Category]])
+          } ~
           pathEndOrSingleSlash {
             complete((categoryDB ? GetAllCategories).mapTo[List[Category]])
           }
@@ -38,7 +42,7 @@ class CategoryRoutes {
           }
         } ~
         put {
-          (path(IntNumber) | parameter('id.as[Int])) { id =>
+          path(IntNumber) { id =>
             entity(as[Category]) { category =>
               complete((categoryDB ? UpdateCategory(id, category)).map(_ => StatusCodes.OK))
             }
