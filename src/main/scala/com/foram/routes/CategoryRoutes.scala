@@ -24,10 +24,8 @@ class CategoryRoutes {
   val categoryRoutes =
     pathPrefix("api" / "categories") {
       get {
-        pathPrefix(Segment) { slug =>
-          pathSuffix(IntNumber) { category_id =>
+          path(IntNumber / "topics") { category_id =>
             complete((topicDB ? GetTopicsByCategory(category_id)).mapTo[List[Topic]])
-          }
         } ~
           path(IntNumber) { id =>
             complete((categoryDB ? GetCategory(id)).mapTo[Option[Category]])

@@ -8,8 +8,9 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import spray.json.DefaultJsonProtocol._
 import akka.util.Timeout
 import akka.pattern.ask
-import com.foram.Main.userDB
-import com.foram.actors.User
+import com.foram.Main.{postDB, userDB}
+import com.foram.actors.PostDB.{GetPostsByUsername}
+import com.foram.actors.{Post, User}
 import com.foram.actors.UserDB._
 
 import scala.concurrent.duration._
@@ -23,8 +24,11 @@ class UserRoutes {
   val userRoutes =
     pathPrefix("api" / "users") {
       get {
-        (path(IntNumber) | parameter('id.as[Int])) { id =>
-          complete((userDB ? GetUser(id)).mapTo[Option[User]])
+        path(Segment / "posts") { username =>
+          complete((postDB ? GetPostsByUsername(username)).mapTo[List[Post]])
+        } ~
+        path(Segment) { username =>
+          complete((userDB ? GetUserByUsername(username)).mapTo[Option[User]])
         } ~
           pathEndOrSingleSlash {
             complete((userDB ? GetAllUsers).mapTo[List[User]])
@@ -36,7 +40,7 @@ class UserRoutes {
           }
         } ~
         put {
-          (path(IntNumber) | parameter('id.as[Int])) { id =>
+          path(IntNumber) { id =>
             entity(as[User]) { user =>
               complete((userDB ? UpdateUser(id, user)).map(_ => StatusCodes.OK))
             }

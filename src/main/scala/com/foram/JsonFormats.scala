@@ -5,8 +5,8 @@ import spray.json.DefaultJsonProtocol
 object JsonFormats {
   import DefaultJsonProtocol._
 
-  implicit val categoryFormat = jsonFormat4(Category)
-  implicit val topicFormat = jsonFormat4(Topic)
+  implicit val categoryFormat = jsonFormat5(Category)
+  implicit val topicFormat = jsonFormat6(Topic)
   implicit val userFormat = jsonFormat4(User)
-  implicit val postFormat = jsonFormat5(Post)
+  implicit val postFormat = jsonFormat6(Post)
 }

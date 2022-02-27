@@ -22,7 +22,7 @@ class PostRoutes {
   val postRoutes =
     pathPrefix("api" / "posts") {
       get {
-        (path(IntNumber) | parameter('id.as[Int])) { id =>
+        path(IntNumber) { id =>
           complete((postDB ? GetPost(id)).mapTo[Option[Post]])
         } ~
           pathEndOrSingleSlash {
@@ -35,7 +35,7 @@ class PostRoutes {
           }
         } ~
         put {
-          (path(IntNumber) | parameter('id.as[Int])) { id =>
+          path(IntNumber) { id =>
             entity(as[Post]) { post =>
               complete((postDB ? UpdatePost(id, post)).map(_ => StatusCodes.OK))
             }

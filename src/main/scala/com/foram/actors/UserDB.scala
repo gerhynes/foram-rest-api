@@ -6,7 +6,8 @@ case class User(id: Int, name: String, username: String, email: String)
 
 object UserDB {
   case object GetAllUsers
-  case class GetUser(id: Int)
+  case class GetUserByUsername(username: String)
+  case class GetUserById(id: Int)
   case class AddUser(user: User)
   case class UpdateUser(id: Int, user: User)
   case class RemoveUser(user: User)
@@ -24,7 +25,11 @@ class UserDB extends Actor with ActorLogging {
       log.info(s"Searching for users")
       sender() ! users.values.toList
 
-    case GetUser(id) =>
+    case GetUserByUsername(username) =>
+      log.info(s"Finding user with username: $username")
+      sender() ! users.values.toList.find(x => x.username == username)
+
+    case GetUserById(id) =>
       log.info(s"Finding user with id: $id")
       sender() ! users.get(id)
 

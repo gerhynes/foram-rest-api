@@ -2,7 +2,7 @@ package com.foram.actors
 
 import akka.actor.{Actor, ActorLogging}
 
-case class Topic(id: Int, title: String, user_id: Int, category_id: Int)
+case class Topic(id: Int, title: String, slug: String, user_id: Int, category_id: Int, category_name: String)
 
 object TopicDB {
   case object GetAllTopics

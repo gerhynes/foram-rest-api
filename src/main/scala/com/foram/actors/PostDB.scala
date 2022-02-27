@@ -2,7 +2,7 @@ package com.foram.actors
 
 import akka.actor.{Actor, ActorLogging}
 
-case class Post(id: Int, user_id: Int, topic_id: Int, post_number: Int, content: String)
+case class Post(id: Int, user_id: Int, username: String, topic_id: Int, post_number: Int, content: String)
 
 object PostDB {
   case object GetAllPosts
@@ -12,6 +12,8 @@ object PostDB {
   case class GetPostsByTopic(topic_id: Int)
 
   case class GetPostsByUser(user_id: Int)
+
+  case class GetPostsByUsername(username: String)
 
   case class AddPost(post: Post)
 
@@ -43,6 +45,10 @@ class PostDB extends Actor with ActorLogging {
     case GetPostsByUser(user_id) =>
       log.info(s"Finding posts for user with id: $user_id")
       sender() ! posts.values.toList.filter(x => x.user_id == user_id)
+
+    case GetPostsByUsername(username) =>
+      log.info(s"Finding posts for user with username: $username")
+      sender() ! posts.values.toList.filter(x => x.username == username)
 
     case AddPost(post) =>
       log.info(s"Adding post $post")
