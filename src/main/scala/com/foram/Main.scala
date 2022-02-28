@@ -34,12 +34,12 @@ object Main extends App {
   )
 
   val topicList = List(
-    Topic(1, "I don't understand promises in JavaScript. Help!", "i-dont-understand-promise-in-javascript-help", 1, 1, "JavaScript"),
-    Topic(2, "Can someone help me with Java multithreading?", "can-someone-help-me-with-java-multithreading", 1, 2, "Java"),
-    Topic(3, "Are there any good Scala resources?", "are there any good scala resources", 2, 3, "Scala"),
-    Topic(4, "How does useEffect work?", "how-does-useeffect-work", 2, 1, "JavaScript"),
-    Topic(5, "Can someone help me set up Spring Boot?", "can-someone-help-me-set-up-spring-boot", 3, 2, "Java"),
-    Topic(6, "Akka Persistence makes no sense, like none at all!", "akka-persistence-makes-no-sense-like-none-at-all", 3, 3, "Scala")
+    Topic(1, "I don't understand promises in JavaScript. Help!", "i-dont-understand-promise-in-javascript-help", 1, "quince", 1, "JavaScript"),
+    Topic(2, "Can someone help me with Java multithreading?", "can-someone-help-me-with-java-multithreading", 1, "quince", 2, "Java"),
+    Topic(3, "Are there any good Scala resources?", "are-there-any-good-scala-resources", 2, "beetz", 3, "Scala"),
+    Topic(4, "How does useEffect work?", "how-does-useeffect-work", 2, "beetz", 1, "JavaScript"),
+    Topic(5, "Can someone help me set up Spring Boot?", "can-someone-help-me-set-up-spring-boot", 3, "naziyah", 2, "Java"),
+    Topic(6, "Akka Persistence makes no sense, like none at all!", "akka-persistence-makes-no-sense-like-none-at-all", 3, "naziyah",3, "Scala")
   )
 
   val userList = List(
@@ -49,15 +49,15 @@ object Main extends App {
   )
 
   val postList = List(
-    Post(1, 1,"quince", 1, 1, "Lorem ipsum dolor sit amet, consectetur adipiscing elit"),
-    Post(2, 2, "beetz", 1, 2, "Nam tempus metus non dui sollicitudin efficitur vel id mauris"),
-    Post(3, 3, "naziyah", 1, 3, "Fusce tristique justo eu porta aliquet"),
-    Post(4, 1, "quince", 2, 1, "Aenean placerat magna quis sollicitudin aliquet"),
-    Post(5, 2, "beetz", 2, 2, "Quisque sed tellus sapien"),
-    Post(6, 3, "naziyah", 2, 3, "Nullam ullamcorper tempor mi vel ornare"),
-    Post(7, 1, "quince", 3, 1, "Quisque auctor nisi eget consectetur consequat"),
-    Post(8, 2, "beetz", 3, 2, "Integer aliquam turpis id mi porttitor pellentesque"),
-    Post(9, 3, "naziyah", 3, 3, "Fusce vel molestie neque, in pharetra nisl")
+    Post(1, 1,"quince", 1, "i-dont-understand-promise-in-javascript-help", 1, "Lorem ipsum dolor sit amet, consectetur adipiscing elit"),
+    Post(2, 2, "beetz", 1, "i-dont-understand-promise-in-javascript-help", 2, "Nam tempus metus non dui sollicitudin efficitur vel id mauris"),
+    Post(3, 3, "naziyah", 1, "i-dont-understand-promise-in-javascript-help", 3, "Fusce tristique justo eu porta aliquet"),
+    Post(4, 1, "quince", 2, "can-someone-help-me-with-java-multithreading", 1, "Aenean placerat magna quis sollicitudin aliquet"),
+    Post(5, 2, "beetz", 2,"can-someone-help-me-with-java-multithreading", 2, "Quisque sed tellus sapien"),
+    Post(6, 3, "naziyah", 2, "can-someone-help-me-with-java-multithreading", 3, "Nullam ullamcorper tempor mi vel ornare"),
+    Post(7, 1, "quince", 3, "are-there-any-good-scala-resources", 1, "Quisque auctor nisi eget consectetur consequat"),
+    Post(8, 2, "beetz", 3, "are-there-any-good-scala-resources", 2, "Integer aliquam turpis id mi porttitor pellentesque"),
+    Post(9, 3, "naziyah", 3, "are-there-any-good-scala-resources", 3, "Fusce vel molestie neque, in pharetra nisl")
   )
 
 

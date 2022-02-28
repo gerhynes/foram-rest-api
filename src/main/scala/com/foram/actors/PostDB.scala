@@ -2,7 +2,7 @@ package com.foram.actors
 
 import akka.actor.{Actor, ActorLogging}
 
-case class Post(id: Int, user_id: Int, username: String, topic_id: Int, post_number: Int, content: String)
+case class Post(id: Int, user_id: Int, username: String, topic_id: Int, topic_slug: String, post_number: Int, content: String)
 
 object PostDB {
   case object GetAllPosts
