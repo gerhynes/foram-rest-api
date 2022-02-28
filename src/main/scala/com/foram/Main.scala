@@ -6,8 +6,9 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import com.foram.actors._
+import com.foram.db._
 import slick.basic.DatabasePublisher
-import slick.jdbc.JdbcBackend._
+import slick.jdbc.PostgresProfile.api._
 
 
 object Main extends App {
@@ -27,7 +28,25 @@ object Main extends App {
   val postDB = system.actorOf(Props[PostDB], "postDB")
 
 
-  val db = Database.forConfig("mydb")
+  val db = Database.forConfig("pgtest")
+
+  try {
+    val users = TableQuery[Users]
+    val categories = TableQuery[Categories]
+    val topics = TableQuery[Topics]
+    val posts = TableQuery[Posts]
+
+    val setupAction = DBIO.seq(
+      (users.schema ++ categories.schema ++ topics.schema ++ posts.schema).create,
+
+      users += (1, "Quincy Lars", "quince", "qlars@example.com"),
+      users += (2, "Beatriz Stephanie", "beetz", "beetz@example.com"),
+      users += (3, "Naz Mahmood", "naziyah", "nazmahmood@example.com")
+    )
+
+    val setupFuture = db.run(setupAction)
+    println(setupFuture)
+  }
 
   // Hardcode values until database is connected
   val categoryList = List(
