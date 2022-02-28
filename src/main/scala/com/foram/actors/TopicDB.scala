@@ -2,7 +2,7 @@ package com.foram.actors
 
 import akka.actor.{Actor, ActorLogging}
 
-case class Topic(id: Int, title: String, slug: String, user_id: Int, category_id: Int, category_name: String)
+case class Topic(id: Int, title: String, slug: String, user_id: Int, username: String, category_id: Int, category_name: String)
 
 object TopicDB {
   case object GetAllTopics
@@ -11,7 +11,9 @@ object TopicDB {
 
   case class GetTopicsByCategory(category_id: Int)
 
-  case class GetTopicsByUser(user_id: Int)
+  case class GetTopicsByUserID(user_id: Int)
+
+  case class GetTopicsByUsername(username: String)
 
   case class AddTopic(topic: Topic)
 
@@ -41,9 +43,13 @@ class TopicDB extends Actor with ActorLogging {
       log.info(s"Finding topics for category with id: $category_id")
       sender() ! topics.values.toList.filter(x => x.category_id == category_id)
 
-    case GetTopicsByUser(user_id) =>
+    case GetTopicsByUserID(user_id) =>
       log.info(s"Finding topics for user with id: $user_id")
       sender() ! topics.values.toList.filter(x => x.user_id == user_id)
+
+    case GetTopicsByUsername(username) =>
+      log.info(s"Finding topics for user with username: $username")
+      sender() ! topics.values.toList.filter(x => x.username == username)
 
     case AddTopic(topic) =>
       log.info(s"Adding topic $topic")
