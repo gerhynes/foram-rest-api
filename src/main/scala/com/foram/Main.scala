@@ -6,6 +6,9 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import com.foram.actors._
+import slick.basic.DatabasePublisher
+import slick.jdbc.JdbcBackend._
+
 
 object Main extends App {
   implicit val system = ActorSystem("foramSystem")
@@ -22,6 +25,9 @@ object Main extends App {
   val topicDB = system.actorOf(Props[TopicDB], "topicDB")
   val userDB = system.actorOf(Props[UserDB], "userDB")
   val postDB = system.actorOf(Props[PostDB], "postDB")
+
+
+  val db = Database.forConfig("mydb")
 
   // Hardcode values until database is connected
   val categoryList = List(
