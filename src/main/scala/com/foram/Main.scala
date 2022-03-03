@@ -14,9 +14,9 @@ import slick.jdbc.PostgresProfile.api._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object Main extends App {
+  // Set up actor system
   implicit val system = ActorSystem("foramSystem")
   implicit val materializer = ActorMaterializer()
-
   // import system.dispatcher
 
   import com.foram.actors.CategoryDB._
@@ -24,33 +24,57 @@ object Main extends App {
   import com.foram.actors.UserDB._
   import com.foram.actors.PostDB._
 
+  // Set up actors
   val categoryDB = system.actorOf(Props[CategoryDB], "categoryDB")
   val topicDB = system.actorOf(Props[TopicDB], "topicDB")
   val userDB = system.actorOf(Props[UserDB], "userDB")
   val postDB = system.actorOf(Props[PostDB], "postDB")
 
+  // Database connection
   val db = Database.forConfig("postgresDB")
+  val users = TableQuery[Users]
+  val categories = TableQuery[Categories]
+  val topics = TableQuery[Topics]
+  val posts = TableQuery[Posts]
 
   try {
-    val users = TableQuery[Users]
-    val categories = TableQuery[Categories]
-    val topics = TableQuery[Topics]
-    val posts = TableQuery[Posts]
-
+    // Seed database
     val setupAction = DBIO.seq(
-      (users.schema ++ categories.schema ++ topics.schema ++ posts.schema).create,
+      (users.schema ++ categories.schema ++ topics.schema ++ posts.schema).createIfNotExists,
 
       users += (1, "Quincy Lars", "quince", "qlars@example.com"),
       users += (2, "Beatriz Stephanie", "beetz", "beetz@example.com"),
-      users += (3, "Naz Mahmood", "naziyah", "nazmahmood@example.com")
+      users += (3, "Naz Mahmood", "naziyah", "nazmahmood@example.com"),
+
+      categories += (1, "JavaScript", "javascript", 1, "Ask questions and share tips for JavaScript, React, Node - anything to do with the JavaScript ecosystem."),
+      categories += (2, "Java", "java", 2, "Ask questions and share tips for Java, Spring, JUnit - anything to do with the Java ecosystem."),
+      categories += (3, "Scala", "scala", 3, "Ask questions and share tips for Scala, Akka, Play - anything to do with the Scala ecosystem."),
+      categories += (4, "Python", "python", 1, "Ask questions and share tips for Django, Pandas, PySpark - anything to do with the Python ecosystem."),
+      categories += (5, "Databases", "databases", 2, "Ask questions and share tips for SQL, Postgres, MongoDB - anything to do with databases."),
+      categories += (6, "DevOps", "devops", 3, "Ask questions and share tips for Docker, Kubernetes, Jenkins - anything to do with DevOps."),
+
+      topics += (1, "I don't understand promises in JavaScript. Help!", "i-dont-understand-promises-in-javascript-help", 1, "quince", 1, "JavaScript"),
+      topics += (2, "Can someone help me with Java multithreading?", "can-someone-help-me-with-java-multithreading", 1, "quince", 2, "Java"),
+      topics += (3, "Are there any good Scala resources?", "are-there-any-good-scala-resources", 2, "beetz", 3, "Scala"),
+      topics += (4, "How does useEffect work?", "how-does-useeffect-work", 2, "beetz", 1, "JavaScript"),
+      topics += (5, "Can someone help me set up Spring Boot?", "can-someone-help-me-set-up-spring-boot", 3, "naziyah", 2, "Java"),
+      topics += (6, "Akka Persistence makes no sense, like none at all!", "akka-persistence-makes-no-sense-like-none-at-all", 3, "naziyah", 3, "Scala"),
+
+      posts += (1, 1, "quince", 1, "i-dont-understand-promises-in-javascript-help", 1, "Lorem ipsum dolor sit amet, consectetur adipiscing elit"),
+      posts +=(2, 2, "beetz", 1, "i-dont-understand-promises-in-javascript-help", 2, "Nam tempus metus non dui sollicitudin efficitur vel id mauris"),
+      posts += (3, 3, "naziyah", 1, "i-dont-understand-promises-in-javascript-help", 3, "Fusce tristique justo eu porta aliquet"),
+      posts += (4, 1, "quince", 2, "can-someone-help-me-with-java-multithreading", 1, "Aenean placerat magna quis sollicitudin aliquet"),
+      posts += (5, 2, "beetz", 2, "can-someone-help-me-with-java-multithreading", 2, "Quisque sed tellus sapien"),
+      posts += (6, 3, "naziyah", 2, "can-someone-help-me-with-java-multithreading", 3, "Nullam ullamcorper tempor mi vel ornare"),
+      posts += (7, 1, "quince", 3, "are-there-any-good-scala-resources", 1, "Quisque auctor nisi eget consectetur consequat"),
+      posts += (8, 2, "beetz", 3, "are-there-any-good-scala-resources", 2, "Integer aliquam turpis id mi porttitor pellentesque"),
+      posts += (9, 3, "naziyah", 3, "are-there-any-good-scala-resources", 3, "Fusce vel molestie neque, in pharetra nisl")
     )
 
     val setupFuture = db.run(setupAction)
 
     Await.result(setupFuture, Duration.Inf)
   } finally db.close
-
-
 
   // Hardcode values until database is connected
   val categoryList = List(
@@ -63,7 +87,7 @@ object Main extends App {
   )
 
   val topicList = List(
-    Topic(1, "I don't understand promises in JavaScript. Help!", "i-dont-understand-promise-in-javascript-help", 1, "quince", 1, "JavaScript"),
+    Topic(1, "I don't understand promises in JavaScript. Help!", "i-dont-understand-promises-in-javascript-help", 1, "quince", 1, "JavaScript"),
     Topic(2, "Can someone help me with Java multithreading?", "can-someone-help-me-with-java-multithreading", 1, "quince", 2, "Java"),
     Topic(3, "Are there any good Scala resources?", "are-there-any-good-scala-resources", 2, "beetz", 3, "Scala"),
     Topic(4, "How does useEffect work?", "how-does-useeffect-work", 2, "beetz", 1, "JavaScript"),
@@ -78,9 +102,9 @@ object Main extends App {
   )
 
   val postList = List(
-    Post(1, 1, "quince", 1, "i-dont-understand-promise-in-javascript-help", 1, "Lorem ipsum dolor sit amet, consectetur adipiscing elit"),
-    Post(2, 2, "beetz", 1, "i-dont-understand-promise-in-javascript-help", 2, "Nam tempus metus non dui sollicitudin efficitur vel id mauris"),
-    Post(3, 3, "naziyah", 1, "i-dont-understand-promise-in-javascript-help", 3, "Fusce tristique justo eu porta aliquet"),
+    Post(1, 1, "quince", 1, "i-dont-understand-promises-in-javascript-help", 1, "Lorem ipsum dolor sit amet, consectetur adipiscing elit"),
+    Post(2, 2, "beetz", 1, "i-dont-understand-promises-in-javascript-help", 2, "Nam tempus metus non dui sollicitudin efficitur vel id mauris"),
+    Post(3, 3, "naziyah", 1, "i-dont-understand-promises-in-javascript-help", 3, "Fusce tristique justo eu porta aliquet"),
     Post(4, 1, "quince", 2, "can-someone-help-me-with-java-multithreading", 1, "Aenean placerat magna quis sollicitudin aliquet"),
     Post(5, 2, "beetz", 2, "can-someone-help-me-with-java-multithreading", 2, "Quisque sed tellus sapien"),
     Post(6, 3, "naziyah", 2, "can-someone-help-me-with-java-multithreading", 3, "Nullam ullamcorper tempor mi vel ornare"),
@@ -114,7 +138,7 @@ object Main extends App {
   // Concat routes
   val routes = categoryRouter.categoryRoutes ~ topicRouter.topicRoutes ~ postRouter.postRoutes ~ userRouter.userRoutes
 
-  // val bindingFuture = Http().newServerAt("localhost", 8080).bind(routes)
+//  val bindingFuture = Http().newServerAt("localhost", 8080).bind(routes)
 
-  // println(s"Server now online at http://localhost:8080")
+//  println(s"Server now online at http://localhost:8080")
 }
