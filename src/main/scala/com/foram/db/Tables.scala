@@ -23,25 +23,27 @@ class Categories(tag: Tag) extends Table[(Int, String, String, Int, String)](tag
 }
 
 // A Topics table with 6 fields: id, title, slug, userID, categoryID and categoryName
-class Topics(tag: Tag) extends Table[(Int, String, String, Int, Int, String)](tag, "TOPICS") {
+class Topics(tag: Tag) extends Table[(Int, String, String, Int, String, Int, String)](tag, "TOPICS") {
   def id = column[Int]("ID", O.PrimaryKey)
   def title = column[String]("TITLE")
   def slug = column[String]("SLUG")
   def userID = column[Int]("USER_ID")
+  def username = column[String]("USERNAME")
   def categoryID = column[Int]("CATEGORY_ID")
   def categoryName= column[String]("CATEGORY_NAME")
   // TODO handle foreign keys
-  def * = (id, title, slug, userID, categoryID, categoryName)
+  def * = (id, title, slug, userID, username, categoryID, categoryName)
 }
 
 // A Posts table with 6 fields: id, userID, username, topicID, postNumber, content
-class Posts(tag: Tag) extends Table[(Int, Int, String, Int, Int, String)](tag, "POSTS") {
+class Posts(tag: Tag) extends Table[(Int, Int, String, Int, String, Int, String)](tag, "POSTS") {
   def id = column[Int]("ID", O.PrimaryKey)
   def userID = column[Int]("USER_ID")
   def username = column[String]("USERNAME")
   def topicID = column[Int]("TOPIC_ID")
+  def topicSlug = column[String]("TOPIC_SLUG")
   def postNumber = column[Int]("POST_NUMBER")
   def content = column[String]("CONTENT")
   // TODO handle foreign keys
-  def * = (id, userID, username, topicID, postNumber, content)
+  def * = (id, userID, username, topicID, topicSlug, postNumber, content)
 }
