@@ -53,8 +53,9 @@ class CategoryActor extends Actor with ActorLogging {
     case CreateCategory(category) =>
       println(s"Creating category $category")
       val categoryFuture = CategoriesDao.create(category)
+      val originalSender = sender
       categoryFuture.onComplete {
-        case Success(category) => sender() ! ActionPerformed(s"Category ${category} created.")
+        case Success(category) => originalSender ! ActionPerformed(s"Category ${category} created.")
         case Failure(e) =>
           println(s"Unable to create category $category")
           e.printStackTrace()

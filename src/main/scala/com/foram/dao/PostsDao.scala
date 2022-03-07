@@ -16,7 +16,7 @@ object PostsDao extends BaseDao {
 
   def findByUsername(username: String): Future[Seq[Post]] = db.run(posts.filter(_.username === username).result)
 
-  def create(post: Post): Future[Int] = db.run(posts += post)
+  def create(post: Post): Future[Int] = db.run(posts.returning(posts.map(_.id)) += post)
 
   def update(id: Int, post: Post): Future[Int] = db.run(posts.filter(_.id === post.id).update(post))
 

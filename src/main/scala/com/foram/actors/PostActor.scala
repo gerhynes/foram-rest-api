@@ -92,8 +92,9 @@ class PostActor extends Actor with ActorLogging {
     case CreatePost(post) =>
       println(s"Creating post $post")
       val postFuture = PostsDao.create(post)
+      val originalSender = sender
       postFuture.onComplete {
-        case Success(success) => sender() ! ActionPerformed(s"Post ${post} created.")
+        case Success(post) => originalSender ! ActionPerformed(s"Post ${post} created.")
         case Failure(e) =>
           println(s"Unable to create post $post")
           e.printStackTrace()

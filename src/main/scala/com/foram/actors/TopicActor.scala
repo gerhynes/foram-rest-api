@@ -94,7 +94,7 @@ class TopicActor extends Actor with ActorLogging {
       val topicFuture = TopicsDao.create(topic)
       val originalSender = sender
       topicFuture.onComplete {
-        case Success(success) => originalSender ! ActionPerformed(s"Topic ${topic.title} created.")
+        case Success(topic) => originalSender ! ActionPerformed(s"Topic ${topic} created.")
         case Failure(e) =>
           println(s"Unable to create topic $topic")
           e.printStackTrace()

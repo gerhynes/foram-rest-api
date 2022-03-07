@@ -12,7 +12,7 @@ object UsersDao extends BaseDao {
 
   def findByUsername(username: String): Future[User] = db.run(users.filter(_.username === username).result.head)
 
-  def create(user: User): Future[Int] = db.run(users += user)
+  def create(user: User): Future[Int] = db.run(users.returning(users.map(_.id)) += user)
 
   def update(id: Int, user: User): Future[Int] = db.run(users.filter(_.id === user.id).update(user))
 

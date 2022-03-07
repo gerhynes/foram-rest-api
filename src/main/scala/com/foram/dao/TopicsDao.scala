@@ -16,7 +16,7 @@ object TopicsDao extends BaseDao {
 
   def findByCategoryID(category_id: Int): Future[Seq[Topic]] = db.run(topics.filter(_.categoryID === category_id).result)
 
-  def create(topic: Topic): Future[Int] = db.run(topics += topic)
+  def create(topic: Topic): Future[Int] = db.run(topics.returning(topics.map(_.id)) += topic)
 
   def update(id: Int, topic: Topic): Future[Int] = db.run(topics.filter(_.id === topic.id).update(topic))
 

@@ -2,10 +2,10 @@ package com.foram.models
 
 import slick.jdbc.PostgresProfile.api._
 
-case class Post(id: Int, user_id: Int, username: String, topic_id: Int, topic_slug: String, post_number: Int, content: String)
+case class Post(id: Option[Int], user_id: Int, username: String, topic_id: Int, topic_slug: String, post_number: Int, content: String)
 
 class PostsTable(tag: Tag) extends Table[Post](tag, "posts") {
-  def id = column[Int]("id", O.PrimaryKey)
+  def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
 
   def userID = column[Int]("user_id")
 
@@ -23,5 +23,5 @@ class PostsTable(tag: Tag) extends Table[Post](tag, "posts") {
 
   def topic = foreignKey("topic_fk", topicID, TableQuery[TopicsTable])(_.id, onUpdate = ForeignKeyAction.Restrict, onDelete = ForeignKeyAction.Cascade)
 
-  def * = (id, userID, username, topicID, topicSlug, postNumber, content) <> (Post.tupled, Post.unapply)
+  def * = (id.?, userID, username, topicID, topicSlug, postNumber, content) <> (Post.tupled, Post.unapply)
 }

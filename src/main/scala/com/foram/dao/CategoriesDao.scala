@@ -10,7 +10,7 @@ object CategoriesDao extends BaseDao {
 
   def findById(id: Int): Future[Category] = db.run(categories.filter(_.id === id).result.head)
 
-  def create(category: Category): Future[Int] = db.run(categories += category)
+  def create(category: Category): Future[Int] = db.run(categories.returning(categories.map(_.id)) += category)
 
   def update(id: Int, category: Category): Future[Int] = db.run(categories.filter(_.id === category.id).update(category))
 
