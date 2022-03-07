@@ -1,8 +1,10 @@
 package com.foram
-import com.foram.actors.{Category, Topic, User, Post}
+
+import com.foram.models.{Category, Post, Topic, User}
 import spray.json.DefaultJsonProtocol
 
 object JsonFormats {
+
   import DefaultJsonProtocol._
 
   implicit val categoryFormat = jsonFormat5(Category)
