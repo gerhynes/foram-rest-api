@@ -1,9 +1,12 @@
-package com.foram.models
+package com.foram.utils
+
+import com.foram.models._
+import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import slick.jdbc.PostgresProfile.api._
 
+// Seeds database with sample tables
 class SeedDB {
   // Database connection
   val db = Database.forConfig("postgresDB")
