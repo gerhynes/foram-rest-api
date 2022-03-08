@@ -8,7 +8,7 @@ import akka.util.Timeout
 import com.foram.Main.{postActor, topicActor}
 import com.foram.actors.PostActor._
 import com.foram.actors.TopicActor._
-import com.foram.models.{Post, Topic}
+import com.foram.models.{Post, Topic, TopicWithPosts}
 import spray.json.DefaultJsonProtocol._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -34,8 +34,8 @@ object TopicRoutes {
           }
       } ~
         post {
-          entity(as[Topic]) { topic =>
-            complete((topicActor ? CreateTopic(topic)).map(_ => StatusCodes.OK))
+          entity(as[TopicWithPosts]) { topicWithPosts =>
+            complete((topicActor ? CreateTopic(topicWithPosts)).map(_ => StatusCodes.OK))
           }
         } ~
         put {

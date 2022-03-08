@@ -2,7 +2,8 @@ package com.foram.actors
 
 import akka.actor.{Actor, ActorLogging, Props}
 import com.foram.dao.TopicsDao
-import com.foram.models.Topic
+import com.foram.dao.PostsDao
+import com.foram.models.{Topic, TopicWithPosts, Post}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
@@ -20,7 +21,7 @@ object TopicActor {
 
   case class GetTopicsByUsername(username: String)
 
-  case class CreateTopic(topic: Topic)
+  case class CreateTopic(topicWithPosts: TopicWithPosts)
 
   case class UpdateTopic(id: Int, topic: Topic)
 
@@ -89,12 +90,29 @@ class TopicActor extends Actor with ActorLogging {
           e.printStackTrace()
       }
 
-    case CreateTopic(topic) =>
-      println(s"Creating topic $topic")
-      val topicFuture = TopicsDao.create(topic)
+    case CreateTopic(topicWithPosts) =>
+      println(s"Creating topic and post from $topicWithPosts")
+
+      // Separate topic and post
+      val topic = topicWithPosts match {
+        case TopicWithPosts(id, title, slug, user_id, username, category_id, category_name, posts) => Topic(id, title, slug, user_id, username, category_id, category_name)
+      }
+      val post = topicWithPosts.posts.head
+
       val originalSender = sender
-      topicFuture.onComplete {
-        case Success(topic) => originalSender ! ActionPerformed(s"Topic ${topic} created.")
+
+      // Save topic and post to database
+      val topicFuture = TopicsDao.create(topic)
+      val postFuture = PostsDao.create(post)
+
+      // Get results of both futures
+      val result = for {
+        topic_id <- topicFuture
+        post_id <- postFuture
+      } yield (topic_id, post_id)
+
+      result.onComplete {
+        case Success(result) => originalSender ! ActionPerformed(s"Topic $result._1 and post $result._2 created.")
         case Failure(e) =>
           println(s"Unable to create topic $topic")
           e.printStackTrace()

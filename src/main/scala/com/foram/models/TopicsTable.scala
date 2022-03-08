@@ -4,6 +4,8 @@ import slick.jdbc.PostgresProfile.api._
 
 case class Topic(id: Option[Int], title: String, slug: String, user_id: Int, username: String, category_id: Int, category_name: String)
 
+case class TopicWithPosts(id: Option[Int], title: String, slug: String, user_id: Int, username: String, category_id: Int, category_name: String, posts: List[Post])
+
 class TopicsTable(tag: Tag) extends Table[Topic](tag, "topics") {
   def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
 
