@@ -1,54 +1,58 @@
 package com.foram.routes
 
-import scala.concurrent._
-import ExecutionContext.Implicits.global
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
-import spray.json.DefaultJsonProtocol._
-import akka.util.Timeout
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.server.Directives._
 import akka.pattern.ask
-import com.foram.Main.{postDB, topicDB}
-import com.foram.actors.{Post, Topic}
-import com.foram.actors.TopicDB._
-import com.foram.actors.PostDB._
+import akka.util.Timeout
+import com.foram.Main.{postActor, topicActor}
+import com.foram.actors.PostActor._
+import com.foram.actors.TopicActor._
+import com.foram.models.{Post, Topic, TopicWithPosts}
+import spray.json.DefaultJsonProtocol._
 
+import java.util.UUID
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-class TopicRoutes {
+object TopicRoutes {
 
   import com.foram.JsonFormats._
 
-  implicit val timeout = Timeout(2 seconds)
+  implicit val timeout = Timeout(5 seconds)
 
-  val topicRoutes =
+  val routes =
     pathPrefix("api" / "topics") {
       get {
-        path(IntNumber / "posts") { topic_id =>
-          complete((postDB ? GetPostsByTopic(topic_id)).mapTo[List[Post]])
+        path(Segment / "posts") { topic_id =>
+          val uuid = UUID.fromString(topic_id)
+          complete((postActor ? GetPostsByTopicID(uuid)).mapTo[List[Post]])
         } ~
-          path(IntNumber) { id =>
-            complete((topicDB ? GetTopic(id)).mapTo[Option[Topic]])
+          path(Segment) { id =>
+            val uuid = UUID.fromString(id)
+            complete((topicActor ? GetTopicByID(uuid)).mapTo[Topic])
           } ~
           pathEndOrSingleSlash {
-            complete((topicDB ? GetAllTopics).mapTo[List[Topic]])
+            complete((topicActor ? GetAllTopics).mapTo[List[Topic]])
           }
       } ~
         post {
-          entity(as[Topic]) { topic =>
-            complete((topicDB ? AddTopic(topic)).map(_ => StatusCodes.OK))
+          entity(as[TopicWithPosts]) { topicWithPosts =>
+            complete((topicActor ? CreateTopic(topicWithPosts)).map(_ => StatusCodes.OK))
           }
         } ~
         put {
-          path(IntNumber) { id =>
+          path(Segment) { id =>
+            val uuid = UUID.fromString(id)
             entity(as[Topic]) { topic =>
-              complete((topicDB ? UpdateTopic(id, topic)).map(_ => StatusCodes.OK))
+              complete((topicActor ? UpdateTopic(uuid, topic)).map(_ => StatusCodes.OK))
             }
           }
         } ~
         delete {
-          entity(as[Topic]) { topic =>
-            complete((topicDB ? RemoveTopic(topic)).map(_ => StatusCodes.OK))
+          path(Segment) { id =>
+            val uuid = UUID.fromString(id)
+            complete((topicActor ? DeleteTopic(uuid)).map(_ => StatusCodes.OK))
           }
         }
     }

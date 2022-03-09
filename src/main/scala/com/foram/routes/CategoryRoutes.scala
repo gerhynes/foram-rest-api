@@ -1,54 +1,59 @@
 package com.foram.routes
 
-import scala.concurrent._
-import ExecutionContext.Implicits.global
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
-import spray.json.DefaultJsonProtocol._
-import akka.util.Timeout
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.server.Directives._
 import akka.pattern.ask
-import com.foram.actors.{Category, Topic}
-import com.foram.actors.CategoryDB._
-import com.foram.Main.{categoryDB, topicDB}
-import com.foram.actors.TopicDB._
+import akka.util.Timeout
+import com.foram.Main.{categoryActor, topicActor}
+import com.foram.actors.CategoryActor._
+import com.foram.actors.TopicActor._
+import com.foram.models.{Category, CategoryWithTopics, Topic}
+import spray.json.DefaultJsonProtocol._
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-class CategoryRoutes {
+import java.util.UUID
+
+object CategoryRoutes {
 
   import com.foram.JsonFormats._
 
-  implicit val timeout = Timeout(2 seconds)
+  implicit val timeout = Timeout(5 seconds)
 
-  val categoryRoutes =
+  val routes =
     pathPrefix("api" / "categories") {
       get {
-          path(IntNumber / "topics") { category_id =>
-            complete((topicDB ? GetTopicsByCategory(category_id)).mapTo[List[Topic]])
+        path(Segment / "topics") { category_id =>
+          val uuid = UUID.fromString(category_id)
+          complete((topicActor ? GetTopicsByCategoryID(uuid)).mapTo[List[Topic]])
         } ~
-          path(IntNumber) { id =>
-            complete((categoryDB ? GetCategory(id)).mapTo[Option[Category]])
+          path(Segment) { id =>
+            val uuid = UUID.fromString(id)
+            complete((categoryActor ? GetCategoryByID(uuid)).mapTo[Category])
           } ~
           pathEndOrSingleSlash {
-            complete((categoryDB ? GetAllCategories).mapTo[List[Category]])
+            complete((categoryActor ? GetAllCategories).mapTo[List[Category]])
           }
       } ~
         post {
-          entity(as[Category]) { category =>
-            complete((categoryDB ? AddCategory(category)).map(_ => StatusCodes.OK))
+          entity(as[CategoryWithTopics]) { categoryWithTopics =>
+            complete((categoryActor ? CreateCategory(categoryWithTopics)).map(_ => StatusCodes.OK))
           }
         } ~
         put {
-          path(IntNumber) { id =>
+          path(Segment) { id =>
             entity(as[Category]) { category =>
-              complete((categoryDB ? UpdateCategory(id, category)).map(_ => StatusCodes.OK))
+              val uuid = UUID.fromString(id)
+              complete((categoryActor ? UpdateCategory(uuid, category)).map(_ => StatusCodes.OK))
             }
           }
         } ~
         delete {
-          entity(as[Category]) { category =>
-            complete((categoryDB ? RemoveCategory(category)).map(_ => StatusCodes.OK))
+          path(Segment) { id =>
+            val uuid = UUID.fromString(id)
+            complete((categoryActor ? DeleteCategory(uuid)).map(_ => StatusCodes.OK))
           }
         }
     }

@@ -20,5 +20,10 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-testkit" % akkaVersion,
   "org.scalatest" %% "scalatest" % scalaTestVersion,
   // JWT
-  "com.pauldijou" %% "jwt-spray-json" % "2.1.0"
+  "com.pauldijou" %% "jwt-spray-json" % "2.1.0",
+  // Slick and Postgres
+  "com.typesafe.slick" %% "slick" % "3.3.3",
+  "org.slf4j" % "slf4j-nop" % "1.6.4",
+  "com.typesafe.slick" %% "slick-hikaricp" % "3.3.3",
+  "org.postgresql" % "postgresql" % "42.3.3"
 )
