@@ -2,22 +2,24 @@ package com.foram.models
 
 import slick.jdbc.PostgresProfile.api._
 
-case class Topic(id: Option[Int], title: String, slug: String, user_id: Int, username: String, category_id: Int, category_name: String)
+import java.util.UUID
 
-case class TopicWithPosts(id: Option[Int], title: String, slug: String, user_id: Int, username: String, category_id: Int, category_name: String, posts: List[Post])
+case class Topic(id: UUID, title: String, slug: String, user_id: UUID, username: String, category_id: UUID, category_name: String)
+
+case class TopicWithPosts(id: UUID, title: String, slug: String, user_id: UUID, username: String, category_id: UUID, category_name: String, posts: List[Post])
 
 class TopicsTable(tag: Tag) extends Table[Topic](tag, "topics") {
-  def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
+  def id = column[UUID]("id", O.PrimaryKey)
 
   def title = column[String]("title")
 
   def slug = column[String]("slug")
 
-  def userID = column[Int]("user_id")
+  def userID = column[UUID]("user_id")
 
   def username = column[String]("username")
 
-  def categoryID = column[Int]("category_id")
+  def categoryID = column[UUID]("category_id")
 
   def categoryName = column[String]("category_name")
 
@@ -25,5 +27,5 @@ class TopicsTable(tag: Tag) extends Table[Topic](tag, "topics") {
 
   def category = foreignKey("category_fk", categoryID, TableQuery[CategoriesTable])(_.id, onUpdate = ForeignKeyAction.Restrict, onDelete = ForeignKeyAction.Cascade)
 
-  def * = (id.?, title, slug, userID, username, categoryID, categoryName) <> (Topic.tupled, Topic.unapply)
+  def * = (id, title, slug, userID, username, categoryID, categoryName) <> (Topic.tupled, Topic.unapply)
 }

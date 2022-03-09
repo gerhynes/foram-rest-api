@@ -4,6 +4,7 @@ import akka.actor.{Actor, ActorLogging}
 import com.foram.dao.UsersDao
 import com.foram.models.User
 
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
 
@@ -12,15 +13,15 @@ object UserActor {
 
   case object GetAllUsers
 
-  case class GetUserByID(id: Int)
+  case class GetUserByID(id: UUID)
 
   case class GetUserByUsername(username: String)
 
   case class CreateUser(user: User)
 
-  case class UpdateUser(id: Int, user: User)
+  case class UpdateUser(id: UUID, user: User)
 
-  case class DeleteUser(id: Int)
+  case class DeleteUser(id: UUID)
 }
 
 

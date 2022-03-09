@@ -10,6 +10,7 @@ import com.foram.actors.PostActor._
 import com.foram.models.Post
 import spray.json.DefaultJsonProtocol._
 
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
@@ -22,8 +23,9 @@ object PostRoutes {
   val routes =
     pathPrefix("api" / "posts") {
       get {
-        path(IntNumber) { id =>
-          complete((postActor ? GetPostByID(id)).mapTo[Post])
+        path(Segment) { id =>
+          val uuid = UUID.fromString(id)
+          complete((postActor ? GetPostByID(uuid)).mapTo[Post])
         } ~
           pathEndOrSingleSlash {
             complete((postActor ? GetAllPosts).mapTo[List[Post]])
@@ -35,15 +37,17 @@ object PostRoutes {
           }
         } ~
         put {
-          path(IntNumber) { id =>
+          path(Segment) { id =>
+            val uuid = UUID.fromString(id)
             entity(as[Post]) { post =>
-              complete((postActor ? UpdatePost(id, post)).map(_ => StatusCodes.OK))
+              complete((postActor ? UpdatePost(uuid, post)).map(_ => StatusCodes.OK))
             }
           }
         } ~
         delete {
-          path(IntNumber) { id =>
-            complete((postActor ? DeletePost(id)).map(_ => StatusCodes.OK))
+          path(Segment) { id =>
+            val uuid = UUID.fromString(id)
+            complete((postActor ? DeletePost(uuid)).map(_ => StatusCodes.OK))
           }
         }
     }

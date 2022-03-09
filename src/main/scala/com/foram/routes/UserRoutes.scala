@@ -12,6 +12,7 @@ import com.foram.actors.UserActor._
 import com.foram.models.{Post, Topic, User}
 import spray.json.DefaultJsonProtocol._
 
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
@@ -43,15 +44,16 @@ object UserRoutes {
           }
         } ~
         put {
-          path(IntNumber) { id =>
+          path(Segment) { id =>
+            val uuid = UUID.fromString(id)
             entity(as[User]) { user =>
-              complete((userActor ? UpdateUser(id, user)).map(_ => StatusCodes.OK))
+              complete((userActor ? UpdateUser(uuid, user)).map(_ => StatusCodes.OK))
             }
           }
         } ~
         delete {
-          path(IntNumber) { id =>
-            complete((userActor ? DeleteUser(id)).map(_ => StatusCodes.OK))
+          path(Segment) { id =>
+            complete((userActor ? DeleteUser(UUID.fromString(id))).map(_ => StatusCodes.OK))
           }
         }
     }

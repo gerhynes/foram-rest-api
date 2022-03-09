@@ -2,10 +2,12 @@ package com.foram.models
 
 import slick.jdbc.PostgresProfile.api._
 
-case class User(id: Option[Int], name: String, username: String, email: String)
+import java.util.UUID
+
+case class User(id: UUID, name: String, username: String, email: String)
 
 class UsersTable(tag: Tag) extends Table[User](tag, "users") {
-  def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
+  def id = column[UUID]("id", O.PrimaryKey)
 
   def name = column[String]("name")
 
@@ -13,5 +15,5 @@ class UsersTable(tag: Tag) extends Table[User](tag, "users") {
 
   def email = column[String]("email")
 
-  def * = (id.?, name, username, email) <> (User.tupled, User.unapply)
+  def * = (id, name, username, email) <> (User.tupled, User.unapply)
 }

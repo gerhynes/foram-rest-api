@@ -2,16 +2,18 @@ package com.foram.models
 
 import slick.jdbc.PostgresProfile.api._
 
-case class Post(id: Option[Int], user_id: Int, username: String, topic_id: Int, topic_slug: String, post_number: Int, content: String)
+import java.util.UUID
+
+case class Post(id: UUID, user_id: UUID, username: String, topic_id: UUID, topic_slug: String, post_number: Int, content: String)
 
 class PostsTable(tag: Tag) extends Table[Post](tag, "posts") {
-  def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
+  def id = column[UUID]("id", O.PrimaryKey)
 
-  def userID = column[Int]("user_id")
+  def userID = column[UUID]("user_id")
 
   def username = column[String]("username")
 
-  def topicID = column[Int]("topic_id")
+  def topicID = column[UUID]("topic_id")
 
   def topicSlug = column[String]("topic_slug")
 
@@ -23,5 +25,5 @@ class PostsTable(tag: Tag) extends Table[Post](tag, "posts") {
 
   def topic = foreignKey("topic_fk", topicID, TableQuery[TopicsTable])(_.id, onUpdate = ForeignKeyAction.Restrict, onDelete = ForeignKeyAction.Cascade)
 
-  def * = (id.?, userID, username, topicID, topicSlug, postNumber, content) <> (Post.tupled, Post.unapply)
+  def * = (id, userID, username, topicID, topicSlug, postNumber, content) <> (Post.tupled, Post.unapply)
 }

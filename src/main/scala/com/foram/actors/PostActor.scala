@@ -4,6 +4,7 @@ import akka.actor.{Actor, ActorLogging, Props}
 import com.foram.dao.PostsDao
 import com.foram.models.Post
 
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
 
@@ -12,19 +13,19 @@ object PostActor {
 
   case object GetAllPosts
 
-  case class GetPostByID(id: Int)
+  case class GetPostByID(id: UUID)
 
-  case class GetPostsByTopicID(topic_id: Int)
+  case class GetPostsByTopicID(topic_id: UUID)
 
-  case class GetPostsByUserID(user_id: Int)
+  case class GetPostsByUserID(user_id: UUID)
 
   case class GetPostsByUsername(username: String)
 
   case class CreatePost(post: Post)
 
-  case class UpdatePost(id: Int, post: Post)
+  case class UpdatePost(id: UUID, post: Post)
 
-  case class DeletePost(id: Int)
+  case class DeletePost(id: UUID)
 
   def props = Props[PostActor]
 }

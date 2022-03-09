@@ -1,9 +1,10 @@
 package com.foram.actors
 
 import akka.actor.{Actor, ActorLogging, Props}
-import com.foram.dao.CategoriesDao
-import com.foram.models.Category
+import com.foram.dao.{CategoriesDao, TopicsDao}
+import com.foram.models.{Category, CategoryWithTopics}
 
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
 
@@ -12,13 +13,13 @@ object CategoryActor {
 
   case object GetAllCategories
 
-  case class GetCategoryByID(id: Int)
+  case class GetCategoryByID(id: UUID)
 
-  case class CreateCategory(category: Category)
+  case class CreateCategory(categoryWithTopics: CategoryWithTopics)
 
-  case class UpdateCategory(id: Int, category: Category)
+  case class UpdateCategory(id: UUID, category: Category)
 
-  case class DeleteCategory(id: Int)
+  case class DeleteCategory(id: UUID)
 
   def props = Props[CategoryActor]
 }
@@ -50,12 +51,29 @@ class CategoryActor extends Actor with ActorLogging {
           e.printStackTrace()
       }
 
-    case CreateCategory(category) =>
-      println(s"Creating category $category")
-      val categoryFuture = CategoriesDao.create(category)
+    case CreateCategory(categoryWithTopics) =>
+      println(s"Creating category and topic from $categoryWithTopics")
+
+      // Separate category and topic
+      val category = categoryWithTopics match {
+        case CategoryWithTopics(id, name, slug, user_id, description, topics) => Category(id, name, slug, user_id, description)
+      }
+      val topic = categoryWithTopics.topics.head
+
       val originalSender = sender
-      categoryFuture.onComplete {
-        case Success(category) => originalSender ! ActionPerformed(s"Category ${category} created.")
+
+      // Save category and topic to database
+      val categoryFuture = CategoriesDao.create(category)
+      val topicFuture = TopicsDao.create(topic)
+
+      // Get results of both futures
+      val result = for {
+        category_id <- categoryFuture
+        topic_id <- topicFuture
+      } yield (category_id, topic_id)
+
+      result.onComplete {
+        case Success(result) => originalSender ! ActionPerformed(s"Category $result._1 and topic $result._2 created.")
         case Failure(e) =>
           println(s"Unable to create category $category")
           e.printStackTrace()

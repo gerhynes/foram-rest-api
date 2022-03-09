@@ -11,6 +11,7 @@ import com.foram.actors.TopicActor._
 import com.foram.models.{Post, Topic, TopicWithPosts}
 import spray.json.DefaultJsonProtocol._
 
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
@@ -23,11 +24,13 @@ object TopicRoutes {
   val routes =
     pathPrefix("api" / "topics") {
       get {
-        path(IntNumber / "posts") { topic_id =>
-          complete((postActor ? GetPostsByTopicID(topic_id)).mapTo[List[Post]])
+        path(Segment / "posts") { topic_id =>
+          val uuid = UUID.fromString(topic_id)
+          complete((postActor ? GetPostsByTopicID(uuid)).mapTo[List[Post]])
         } ~
-          path(IntNumber) { id =>
-            complete((topicActor ? GetTopicByID(id)).mapTo[Topic])
+          path(Segment) { id =>
+            val uuid = UUID.fromString(id)
+            complete((topicActor ? GetTopicByID(uuid)).mapTo[Topic])
           } ~
           pathEndOrSingleSlash {
             complete((topicActor ? GetAllTopics).mapTo[List[Topic]])
@@ -39,15 +42,17 @@ object TopicRoutes {
           }
         } ~
         put {
-          path(IntNumber) { id =>
+          path(Segment) { id =>
+            val uuid = UUID.fromString(id)
             entity(as[Topic]) { topic =>
-              complete((topicActor ? UpdateTopic(id, topic)).map(_ => StatusCodes.OK))
+              complete((topicActor ? UpdateTopic(uuid, topic)).map(_ => StatusCodes.OK))
             }
           }
         } ~
         delete {
-          path(IntNumber) { id =>
-            complete((topicActor ? DeleteTopic(id)).map(_ => StatusCodes.OK))
+          path(Segment) { id =>
+            val uuid = UUID.fromString(id)
+            complete((topicActor ? DeleteTopic(uuid)).map(_ => StatusCodes.OK))
           }
         }
     }

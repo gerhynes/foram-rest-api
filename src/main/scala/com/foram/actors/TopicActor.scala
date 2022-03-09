@@ -3,8 +3,9 @@ package com.foram.actors
 import akka.actor.{Actor, ActorLogging, Props}
 import com.foram.dao.TopicsDao
 import com.foram.dao.PostsDao
-import com.foram.models.{Topic, TopicWithPosts, Post}
+import com.foram.models.{Post, Topic, TopicWithPosts}
 
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
 
@@ -13,19 +14,19 @@ object TopicActor {
 
   case object GetAllTopics
 
-  case class GetTopicByID(id: Int)
+  case class GetTopicByID(id: UUID)
 
-  case class GetTopicsByCategoryID(category_id: Int)
+  case class GetTopicsByCategoryID(category_id: UUID)
 
-  case class GetTopicsByUserID(user_id: Int)
+  case class GetTopicsByUserID(user_id: UUID)
 
   case class GetTopicsByUsername(username: String)
 
   case class CreateTopic(topicWithPosts: TopicWithPosts)
 
-  case class UpdateTopic(id: Int, topic: Topic)
+  case class UpdateTopic(id: UUID, topic: Topic)
 
-  case class DeleteTopic(id: Int)
+  case class DeleteTopic(id: UUID)
 
   def props = Props[TopicActor]
 }
