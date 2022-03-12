@@ -101,7 +101,7 @@ class TopicActor extends Actor with ActorLogging {
 
       // Separate topic and post
       val topic = topicWithPosts match {
-        case TopicWithPosts(id, title, slug, user_id, username, category_id, category_name, posts) => Topic(id, title, slug, user_id, username, category_id, category_name)
+        case TopicWithPosts(id, title, slug, user_id, username, category_id, category_name, created_at, updated_at, posts) => Topic(id, title, slug, user_id, username, category_id, category_name, created_at, updated_at)
       }
       val post = topicWithPosts.posts.head
 

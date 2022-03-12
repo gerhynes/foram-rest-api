@@ -58,7 +58,7 @@ class CategoryActor extends Actor with ActorLogging {
 
       // Separate category and topic
       val category = categoryWithTopics match {
-        case CategoryWithTopics(id, name, slug, user_id, description, topics) => Category(id, name, slug, user_id, description)
+        case CategoryWithTopics(id, name, slug, user_id, description, created_at, updated_at, topics) => Category(id, name, slug, user_id, description, created_at, updated_at)
       }
       val topic = categoryWithTopics.topics.head
 
