@@ -39,6 +39,7 @@ class UserActor extends Actor with ActorLogging {
         case Failure(e) =>
           println("Users not found")
           e.printStackTrace()
+          originalSender ! e
       }
 
     case GetUserByID(id) =>
@@ -50,6 +51,7 @@ class UserActor extends Actor with ActorLogging {
         case Failure(e) =>
           println(s"User $id not found")
           e.printStackTrace()
+          originalSender ! e
       }
 
     case GetUserByUsername(username) =>
@@ -61,6 +63,7 @@ class UserActor extends Actor with ActorLogging {
         case Failure(e) =>
           println(s"User $username not found")
           e.printStackTrace()
+          originalSender ! e
       }
 
     case CreateUser(user) =>
@@ -72,6 +75,7 @@ class UserActor extends Actor with ActorLogging {
         case Failure(e) =>
           println(s"User $user could not be created")
           e.printStackTrace()
+          originalSender ! e
       }
 
     case UpdateUser(id, user) =>
@@ -83,6 +87,7 @@ class UserActor extends Actor with ActorLogging {
         case Failure(e) =>
           println(s"Unable to update user $id")
           e.printStackTrace()
+          originalSender ! e
       }
 
     case DeleteUser(id) =>
@@ -94,6 +99,7 @@ class UserActor extends Actor with ActorLogging {
         case Failure(e) =>
           println(s"Unable to delete user $id")
           e.printStackTrace()
+          originalSender ! e
       }
   }
 }

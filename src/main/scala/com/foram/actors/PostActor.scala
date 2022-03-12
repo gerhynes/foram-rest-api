@@ -44,6 +44,7 @@ class PostActor extends Actor with ActorLogging {
         case Failure(e) =>
           println("Posts not found")
           e.printStackTrace()
+          originalSender ! e
       }
 
     case GetPostByID(id) =>
@@ -55,6 +56,7 @@ class PostActor extends Actor with ActorLogging {
         case Failure(e) =>
           println(s"Post $id not found")
           e.printStackTrace()
+          originalSender ! e
       }
 
     case GetPostsByTopicID(topic_id) =>
@@ -66,6 +68,7 @@ class PostActor extends Actor with ActorLogging {
         case Failure(e) =>
           println(s"Posts with topic_id $topic_id not found")
           e.printStackTrace()
+          originalSender ! e
       }
 
     case GetPostsByUserID(user_id) =>
@@ -77,6 +80,7 @@ class PostActor extends Actor with ActorLogging {
         case Failure(e) =>
           println(s"Posts with user_id $user_id not found")
           e.printStackTrace()
+          originalSender ! e
       }
 
     case GetPostsByUsername(username) =>
@@ -88,6 +92,7 @@ class PostActor extends Actor with ActorLogging {
         case Failure(e) =>
           println(s"Posts with username $username not found")
           e.printStackTrace()
+          originalSender ! e
       }
 
     case CreatePost(post) =>
@@ -99,6 +104,7 @@ class PostActor extends Actor with ActorLogging {
         case Failure(e) =>
           println(s"Unable to create post $post")
           e.printStackTrace()
+          originalSender ! e
       }
 
     case UpdatePost(id, post) =>
@@ -110,6 +116,7 @@ class PostActor extends Actor with ActorLogging {
         case Failure(e) =>
           println(s"Unable to update post $id")
           e.printStackTrace()
+          originalSender ! e
       }
 
     case DeletePost(id) =>
@@ -121,6 +128,7 @@ class PostActor extends Actor with ActorLogging {
         case Failure(e) =>
           println(s"Unable to delete post $id")
           e.printStackTrace()
+          originalSender ! e
       }
   }
 }
