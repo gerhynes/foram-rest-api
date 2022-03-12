@@ -3,8 +3,10 @@ package com.foram.routes
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.ExceptionHandler
 import akka.pattern.ask
 import akka.util.Timeout
+import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import com.foram.Main.postActor
 import com.foram.actors.PostActor._
 import com.foram.models.Post
@@ -20,35 +22,49 @@ object PostRoutes {
 
   implicit val timeout = Timeout(5 seconds)
 
-  val routes =
-    pathPrefix("api" / "posts") {
-      get {
-        path(Segment) { id =>
-          val uuid = UUID.fromString(id)
-          complete((postActor ? GetPostByID(uuid)).mapTo[Post])
-        } ~
-          pathEndOrSingleSlash {
-            complete((postActor ? GetAllPosts).mapTo[List[Post]])
-          }
-      } ~
-        post {
-          entity(as[Post]) { post =>
-            complete((postActor ? CreatePost(post)).map(_ => StatusCodes.OK))
-          }
-        } ~
-        put {
+  val routes = cors() {
+    handleExceptions(customExceptionHandler) {
+      pathPrefix("api" / "posts") {
+        get {
           path(Segment) { id =>
             val uuid = UUID.fromString(id)
+            complete((postActor ? GetPostByID(uuid)).mapTo[Post])
+          } ~
+            pathEndOrSingleSlash {
+              complete((postActor ? GetAllPosts).mapTo[List[Post]])
+            }
+        } ~
+          post {
             entity(as[Post]) { post =>
-              complete((postActor ? UpdatePost(uuid, post)).map(_ => StatusCodes.OK))
+              complete((postActor ? CreatePost(post)).map(_ => StatusCodes.Created))
+            }
+          } ~
+          put {
+            path(Segment) { id =>
+              val uuid = UUID.fromString(id)
+              entity(as[Post]) { post =>
+                complete((postActor ? UpdatePost(uuid, post)).map(_ => StatusCodes.OK))
+              }
+            }
+          } ~
+          delete {
+            path(Segment) { id =>
+              val uuid = UUID.fromString(id)
+              complete((postActor ? DeletePost(uuid)).map(_ => StatusCodes.OK))
             }
           }
-        } ~
-        delete {
-          path(Segment) { id =>
-            val uuid = UUID.fromString(id)
-            complete((postActor ? DeletePost(uuid)).map(_ => StatusCodes.OK))
-          }
-        }
+      }
     }
+  }
+
+  implicit val customExceptionHandler: ExceptionHandler = ExceptionHandler {
+    case e: NoSuchElementException =>
+      complete(StatusCodes.NotFound, "Cannot find resource")
+    case e: ClassCastException =>
+      complete(StatusCodes.NotFound, "Incorrect resource returned")
+    case e: RuntimeException =>
+      complete(StatusCodes.NotFound, e.getMessage)
+    case e: IllegalArgumentException =>
+      complete(StatusCodes.BadRequest, "Illegal argument passed")
+  }
 }

@@ -38,6 +38,7 @@ class CategoryActor extends Actor with ActorLogging {
         case Failure(e) =>
           println("Categories not found")
           e.printStackTrace()
+          originalSender ! e
       }
 
     case GetCategoryByID(id) =>
@@ -49,6 +50,7 @@ class CategoryActor extends Actor with ActorLogging {
         case Failure(e) =>
           println(s"Category $id not found")
           e.printStackTrace()
+          originalSender ! e
       }
 
     case CreateCategory(categoryWithTopics) =>
@@ -77,6 +79,7 @@ class CategoryActor extends Actor with ActorLogging {
         case Failure(e) =>
           println(s"Unable to create category $category")
           e.printStackTrace()
+          originalSender ! e
       }
 
     case UpdateCategory(id, category) =>
@@ -88,6 +91,7 @@ class CategoryActor extends Actor with ActorLogging {
         case Failure(e) =>
           println(s"Unable to update category $id")
           e.printStackTrace()
+          originalSender ! e
       }
 
     case DeleteCategory(id) =>
@@ -99,6 +103,7 @@ class CategoryActor extends Actor with ActorLogging {
         case Failure(e) =>
           println(s"Unable to delete category id $id")
           e.printStackTrace()
+          originalSender ! e
       }
   }
 }

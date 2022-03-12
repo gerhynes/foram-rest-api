@@ -45,6 +45,7 @@ class TopicActor extends Actor with ActorLogging {
         case Failure(e) =>
           println("Topics not found")
           e.printStackTrace()
+          originalSender ! e
       }
 
     case GetTopicByID(id) =>
@@ -56,6 +57,7 @@ class TopicActor extends Actor with ActorLogging {
         case Failure(e) =>
           println(s"Topic $id not found")
           e.printStackTrace()
+          originalSender ! e
       }
 
     case GetTopicsByCategoryID(category_id) =>
@@ -67,6 +69,7 @@ class TopicActor extends Actor with ActorLogging {
         case Failure(e) =>
           println(s"Topics with category_id $category_id not found")
           e.printStackTrace()
+          originalSender ! e
       }
 
     case GetTopicsByUserID(user_id) =>
@@ -78,6 +81,7 @@ class TopicActor extends Actor with ActorLogging {
         case Failure(e) =>
           println(s"Topics with user_id $user_id not found")
           e.printStackTrace()
+          originalSender ! e
       }
 
     case GetTopicsByUsername(username) =>
@@ -89,6 +93,7 @@ class TopicActor extends Actor with ActorLogging {
         case Failure(e) =>
           println(s"Topics with username $username not found")
           e.printStackTrace()
+          originalSender ! e
       }
 
     case CreateTopic(topicWithPosts) =>
@@ -100,6 +105,7 @@ class TopicActor extends Actor with ActorLogging {
       }
       val post = topicWithPosts.posts.head
 
+      // Store original sender for use when future resolved
       val originalSender = sender
 
       // Save topic and post to database
@@ -117,6 +123,7 @@ class TopicActor extends Actor with ActorLogging {
         case Failure(e) =>
           println(s"Unable to create topic $topic")
           e.printStackTrace()
+          originalSender ! e
       }
 
     case UpdateTopic(id, topic) =>
@@ -128,6 +135,7 @@ class TopicActor extends Actor with ActorLogging {
         case Failure(e) =>
           println(s"Unable to update topic $id")
           e.printStackTrace()
+          originalSender ! e
       }
 
     case DeleteTopic(id) =>
@@ -139,6 +147,7 @@ class TopicActor extends Actor with ActorLogging {
         case Failure(e) =>
           println(s"Unable to delete topic $id")
           e.printStackTrace()
+          originalSender ! e
       }
   }
 }
