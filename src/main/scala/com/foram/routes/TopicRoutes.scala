@@ -6,7 +6,6 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.pattern.ask
 import akka.util.Timeout
-import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import com.foram.Main.{postActor, topicActor}
 import com.foram.actors.PostActor._
 import com.foram.actors.TopicActor._
@@ -23,54 +22,40 @@ object TopicRoutes {
 
   implicit val timeout = Timeout(5 seconds)
 
-  val routes = cors() {
-    handleExceptions(customExceptionHandler) {
-      pathPrefix("api" / "topics") {
-        get {
-          path(Segment / "posts") { topic_id =>
-            val uuid = UUID.fromString(topic_id)
-            complete((postActor ? GetPostsByTopicID(uuid)).mapTo[List[Post]])
-          } ~
-            path(Segment) { id =>
-              val uuid = UUID.fromString(id)
-              complete((topicActor ? GetTopicByID(uuid)).mapTo[Topic])
-            } ~
-            pathEndOrSingleSlash {
-              complete((topicActor ? GetAllTopics).mapTo[List[Topic]])
-            }
+  val routes =
+    pathPrefix("api" / "topics") {
+      get {
+        path(Segment / "posts") { topic_id =>
+          val uuid = UUID.fromString(topic_id)
+          complete((postActor ? GetPostsByTopicID(uuid)).mapTo[List[Post]])
         } ~
-          post {
-            entity(as[TopicWithPosts]) { topicWithPosts =>
-              complete((topicActor ? CreateTopic(topicWithPosts)).map(_ => StatusCodes.Created))
-            }
+          path(Segment) { id =>
+            val uuid = UUID.fromString(id)
+            complete((topicActor ? GetTopicByID(uuid)).mapTo[Topic])
           } ~
-          put {
-            path(Segment) { id =>
-              val uuid = UUID.fromString(id)
-              entity(as[Topic]) { topic =>
-                complete((topicActor ? UpdateTopic(uuid, topic)).map(_ => StatusCodes.OK))
-              }
-            }
-          } ~
-          delete {
-            path(Segment) { id =>
-              val uuid = UUID.fromString(id)
-              complete((topicActor ? DeleteTopic(uuid)).map(_ => StatusCodes.OK))
+          pathEndOrSingleSlash {
+            complete((topicActor ? GetAllTopics).mapTo[List[Topic]])
+          }
+      } ~
+        post {
+          entity(as[TopicWithPosts]) { topicWithPosts =>
+            complete((topicActor ? CreateTopic(topicWithPosts)).map(_ => StatusCodes.Created))
+          }
+        } ~
+        put {
+          path(Segment) { id =>
+            val uuid = UUID.fromString(id)
+            entity(as[Topic]) { topic =>
+              complete((topicActor ? UpdateTopic(uuid, topic)).map(_ => StatusCodes.OK))
             }
           }
-      }
+        } ~
+        delete {
+          path(Segment) { id =>
+            val uuid = UUID.fromString(id)
+            complete((topicActor ? DeleteTopic(uuid)).map(_ => StatusCodes.OK))
+          }
+        }
     }
-  }
-
-  implicit val customExceptionHandler: ExceptionHandler = ExceptionHandler {
-    case e: NoSuchElementException =>
-      complete(StatusCodes.NotFound, "Cannot find resource")
-    case e: ClassCastException =>
-      complete(StatusCodes.NotFound, "Incorrect resource returned")
-    case e: RuntimeException =>
-      complete(StatusCodes.NotFound, e.getMessage)
-    case e: IllegalArgumentException =>
-      complete(StatusCodes.BadRequest, "Illegal argument passed")
-  }
 }
 
