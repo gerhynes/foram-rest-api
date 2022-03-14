@@ -1,8 +1,8 @@
 package com.foram.actors
 
 import akka.actor.{Actor, ActorLogging, Props}
-import com.foram.dao.{CategoriesDao, TopicsDao}
-import com.foram.models.{Category, CategoryWithTopics}
+import com.foram.dao.{CategoriesDao, PostsDao, TopicsDao}
+import com.foram.models.{Category, NewCategory}
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -15,7 +15,7 @@ object CategoryActor {
 
   case class GetCategoryByID(id: UUID)
 
-  case class CreateCategory(categoryWithTopics: CategoryWithTopics)
+  case class CreateCategory(newCategory: NewCategory)
 
   case class UpdateCategory(id: UUID, category: Category)
 
@@ -53,29 +53,32 @@ class CategoryActor extends Actor with ActorLogging {
           originalSender ! e
       }
 
-    case CreateCategory(categoryWithTopics) =>
-      println(s"Creating category and topic from $categoryWithTopics")
+    case CreateCategory(newCategory) =>
+      println(s"Creating new category from $newCategory")
 
-      // Separate category and topic
-      val category = categoryWithTopics match {
-        case CategoryWithTopics(id, name, slug, user_id, description, topics) => Category(id, name, slug, user_id, description)
+      // Separate category, topic and post
+      val category = newCategory match {
+        case NewCategory(id, name, slug, user_id, description, created_at, updated_at, topics, posts) => Category(id, name, slug, user_id, description, created_at, updated_at)
       }
-      val topic = categoryWithTopics.topics.head
+      val topic = newCategory.topics.head
+      val post = newCategory.posts.head
 
       val originalSender = sender
 
-      // Save category and topic to database
+      // Save category, topic and post to database
       val categoryFuture = CategoriesDao.create(category)
       val topicFuture = TopicsDao.create(topic)
+      val postFuture = PostsDao.create(post)
 
-      // Get results of both futures
+      // Get results of all futures
       val result = for {
         category_id <- categoryFuture
         topic_id <- topicFuture
-      } yield (category_id, topic_id)
+        post_id <- postFuture
+      } yield (category_id, topic_id, post_id)
 
       result.onComplete {
-        case Success(result) => originalSender ! ActionPerformed(s"Category $result._1 and topic $result._2 created.")
+        case Success(result) => originalSender ! ActionPerformed(s"Category $result._1, topic $result._2, post $result._3 created.")
         case Failure(e) =>
           println(s"Unable to create category $category")
           e.printStackTrace()

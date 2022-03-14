@@ -1,9 +1,8 @@
 package com.foram.actors
 
 import akka.actor.{Actor, ActorLogging, Props}
-import com.foram.dao.TopicsDao
-import com.foram.dao.PostsDao
-import com.foram.models.{Post, Topic, TopicWithPosts}
+import com.foram.dao.{PostsDao, TopicsDao}
+import com.foram.models.{NewTopic, Topic}
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -22,7 +21,7 @@ object TopicActor {
 
   case class GetTopicsByUsername(username: String)
 
-  case class CreateTopic(topicWithPosts: TopicWithPosts)
+  case class CreateTopic(newTopic: NewTopic)
 
   case class UpdateTopic(id: UUID, topic: Topic)
 
@@ -96,14 +95,14 @@ class TopicActor extends Actor with ActorLogging {
           originalSender ! e
       }
 
-    case CreateTopic(topicWithPosts) =>
-      println(s"Creating topic and post from $topicWithPosts")
+    case CreateTopic(newTopic) =>
+      println(s"Creating new topic from $newTopic")
 
       // Separate topic and post
-      val topic = topicWithPosts match {
-        case TopicWithPosts(id, title, slug, user_id, username, category_id, category_name, posts) => Topic(id, title, slug, user_id, username, category_id, category_name)
+      val topic = newTopic match {
+        case NewTopic(id, title, slug, user_id, username, category_id, category_name, created_at, updated_at, posts) => Topic(id, title, slug, user_id, username, category_id, category_name, created_at, updated_at)
       }
-      val post = topicWithPosts.posts.head
+      val post = newTopic.posts.head
 
       // Store original sender for use when future resolved
       val originalSender = sender
