@@ -2,10 +2,10 @@ package com.foram.models
 
 import slick.jdbc.PostgresProfile.api._
 
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, OffsetDateTime}
 import java.util.UUID
 
-case class Post(id: UUID, user_id: UUID, username: String, topic_id: UUID, topic_slug: String, post_number: Int, content: String, created_at: LocalDateTime, updated_at: LocalDateTime)
+case class Post(id: UUID, user_id: UUID, username: String, topic_id: UUID, topic_slug: String, post_number: Int, content: String, created_at: OffsetDateTime, updated_at: OffsetDateTime)
 
 class PostsTable(tag: Tag) extends Table[Post](tag, "posts") {
   def id = column[UUID]("id", O.PrimaryKey)
@@ -22,9 +22,9 @@ class PostsTable(tag: Tag) extends Table[Post](tag, "posts") {
 
   def content = column[String]("content")
 
-  def createdAt = column[LocalDateTime]("created_at")
+  def createdAt = column[OffsetDateTime]("created_at")
 
-  def updatedAt = column[LocalDateTime]("updated_at")
+  def updatedAt = column[OffsetDateTime]("updated_at")
 
   def user = foreignKey("user_fk", userID, TableQuery[UsersTable])(_.id, onUpdate = ForeignKeyAction.Restrict, onDelete = ForeignKeyAction.Cascade)
 

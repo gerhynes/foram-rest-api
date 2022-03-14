@@ -2,12 +2,12 @@ package com.foram.models
 
 import slick.jdbc.PostgresProfile.api._
 
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, OffsetDateTime}
 import java.util.UUID
 
-case class Category(id: UUID, name: String, slug: String, user_id: UUID, description: String, created_at: LocalDateTime, updated_at: LocalDateTime)
+case class Category(id: UUID, name: String, slug: String, user_id: UUID, description: String, created_at: OffsetDateTime, updated_at: OffsetDateTime)
 
-case class CategoryWithTopics(id: UUID, name: String, slug: String, user_id: UUID, description: String, created_at: LocalDateTime, updated_at: LocalDateTime, topics: List[Topic])
+case class CategoryWithTopics(id: UUID, name: String, slug: String, user_id: UUID, description: String, created_at: OffsetDateTime, updated_at: OffsetDateTime, topics: List[Topic])
 
 class CategoriesTable(tag: Tag) extends Table[Category](tag, "categories") {
   def id = column[UUID]("id", O.PrimaryKey)
@@ -20,9 +20,9 @@ class CategoriesTable(tag: Tag) extends Table[Category](tag, "categories") {
 
   def description = column[String]("description")
 
-  def createdAt = column[LocalDateTime]("created_at")
+  def createdAt = column[OffsetDateTime]("created_at")
 
-  def updatedAt = column[LocalDateTime]("updated_at")
+  def updatedAt = column[OffsetDateTime]("updated_at")
 
   def user = foreignKey("user_fk", userID, TableQuery[UsersTable])(_.id, onUpdate = ForeignKeyAction.Restrict, onDelete = ForeignKeyAction.Cascade)
 

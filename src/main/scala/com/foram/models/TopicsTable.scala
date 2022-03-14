@@ -2,12 +2,12 @@ package com.foram.models
 
 import slick.jdbc.PostgresProfile.api._
 
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, OffsetDateTime}
 import java.util.UUID
 
-case class Topic(id: UUID, title: String, slug: String, user_id: UUID, username: String, category_id: UUID, category_name: String, created_at: LocalDateTime, updated_at: LocalDateTime)
+case class Topic(id: UUID, title: String, slug: String, user_id: UUID, username: String, category_id: UUID, category_name: String, created_at: OffsetDateTime, updated_at: OffsetDateTime)
 
-case class TopicWithPosts(id: UUID, title: String, slug: String, user_id: UUID, username: String, category_id: UUID, category_name: String, created_at: LocalDateTime, updated_at: LocalDateTime, posts: List[Post])
+case class TopicWithPosts(id: UUID, title: String, slug: String, user_id: UUID, username: String, category_id: UUID, category_name: String, created_at: OffsetDateTime, updated_at: OffsetDateTime, posts: List[Post])
 
 class TopicsTable(tag: Tag) extends Table[Topic](tag, "topics") {
   def id = column[UUID]("id", O.PrimaryKey)
@@ -24,9 +24,9 @@ class TopicsTable(tag: Tag) extends Table[Topic](tag, "topics") {
 
   def categoryName = column[String]("category_name")
 
-  def createdAt = column[LocalDateTime]("created_at")
+  def createdAt = column[OffsetDateTime]("created_at")
 
-  def updatedAt = column[LocalDateTime]("updated_at")
+  def updatedAt = column[OffsetDateTime]("updated_at")
 
   def user = foreignKey("user_fk", userID, TableQuery[UsersTable])(_.id, onUpdate = ForeignKeyAction.Restrict, onDelete = ForeignKeyAction.Cascade)
 
