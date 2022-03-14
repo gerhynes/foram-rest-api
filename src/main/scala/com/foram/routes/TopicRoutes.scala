@@ -9,7 +9,7 @@ import akka.util.Timeout
 import com.foram.Main.{postActor, topicActor}
 import com.foram.actors.PostActor._
 import com.foram.actors.TopicActor._
-import com.foram.models.{Post, Topic, TopicWithPosts}
+import com.foram.models.{Post, Topic, NewTopic}
 import spray.json.DefaultJsonProtocol._
 
 import java.util.UUID
@@ -38,8 +38,8 @@ object TopicRoutes {
           }
       } ~
         post {
-          entity(as[TopicWithPosts]) { topicWithPosts =>
-            complete((topicActor ? CreateTopic(topicWithPosts)).map(_ => StatusCodes.Created))
+          entity(as[NewTopic]) { newTopic =>
+            complete((topicActor ? CreateTopic(newTopic)).map(_ => StatusCodes.Created))
           }
         } ~
         put {

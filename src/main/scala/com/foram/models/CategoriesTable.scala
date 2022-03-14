@@ -2,12 +2,12 @@ package com.foram.models
 
 import slick.jdbc.PostgresProfile.api._
 
-import java.time.{LocalDateTime, OffsetDateTime}
+import java.time.OffsetDateTime
 import java.util.UUID
 
 case class Category(id: UUID, name: String, slug: String, user_id: UUID, description: String, created_at: OffsetDateTime, updated_at: OffsetDateTime)
 
-case class CategoryWithTopics(id: UUID, name: String, slug: String, user_id: UUID, description: String, created_at: OffsetDateTime, updated_at: OffsetDateTime, topics: List[Topic])
+case class NewCategory(id: UUID, name: String, slug: String, user_id: UUID, description: String, created_at: OffsetDateTime, updated_at: OffsetDateTime, topics: List[Topic], posts: List[Post])
 
 class CategoriesTable(tag: Tag) extends Table[Category](tag, "categories") {
   def id = column[UUID]("id", O.PrimaryKey)

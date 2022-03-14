@@ -3,13 +3,12 @@ package com.foram.routes
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.ExceptionHandler
 import akka.pattern.ask
 import akka.util.Timeout
 import com.foram.Main.{categoryActor, topicActor}
 import com.foram.actors.CategoryActor._
 import com.foram.actors.TopicActor._
-import com.foram.models.{Category, CategoryWithTopics, Topic}
+import com.foram.models.{Category, NewCategory, Topic}
 import spray.json.DefaultJsonProtocol._
 
 import java.util.UUID
@@ -38,8 +37,8 @@ object CategoryRoutes {
           }
       } ~
         post {
-          entity(as[CategoryWithTopics]) { categoryWithTopics =>
-            complete((categoryActor ? CreateCategory(categoryWithTopics)).map(_ => StatusCodes.Created))
+          entity(as[NewCategory]) { newCategory =>
+            complete((categoryActor ? CreateCategory(newCategory)).map(_ => StatusCodes.Created))
           }
         } ~
         put {

@@ -3,7 +3,7 @@ package com.foram
 import com.foram.models._
 import spray.json.{DefaultJsonProtocol, DeserializationException, JsString, JsValue, JsonFormat, deserializationError}
 
-import java.time.{LocalDateTime, LocalTime, OffsetDateTime}
+import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 import scala.util.Try
@@ -44,8 +44,8 @@ object JsonFormats {
   implicit val categoryFormat = jsonFormat7(Category)
   implicit val topicFormat = jsonFormat9(Topic)
   implicit val postFormat = jsonFormat9(Post)
-  implicit val categoryWithTopicsFormat = jsonFormat8(CategoryWithTopics)
-  implicit val topicWithPostsFormat = jsonFormat10(TopicWithPosts)
+  implicit val newCategoryFormat = jsonFormat9(NewCategory)
+  implicit val newTopicFormat = jsonFormat10(NewTopic)
   implicit val userFormat = jsonFormat6(User)
 }
 
