@@ -9,6 +9,8 @@ import scala.concurrent.Future
 object TopicsDao extends BaseDao {
   def findAll: Future[Seq[Topic]] = db.run(topics.result)
 
+  def findLatest: Future[Seq[Topic]] = db.run(topics.sortBy(_.createdAt.desc).take(10).result)
+
   def findById(id: UUID): Future[Topic] = db.run(topics.filter(_.id === id).result.head)
 
   def findByUsername(username: String): Future[Seq[Topic]] = db.run(topics.filter(_.username === username).result)
