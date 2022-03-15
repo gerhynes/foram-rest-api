@@ -7,7 +7,7 @@ import java.util.UUID
 import scala.concurrent.Future
 
 object UsersDao extends BaseDao {
-  def findAll: Future[Seq[User]] = db.run(users.result)
+  def findAll: Future[Seq[User]] = db.run(users.sortBy(_.createdAt.asc).result)
 
   def findById(id: UUID): Future[User] = db.run(users.filter(_.id === id).result.head)
 
