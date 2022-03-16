@@ -25,6 +25,9 @@ object TopicRoutes {
   val routes =
     pathPrefix("api" / "topics") {
       get {
+        path("latest") {
+          complete((topicActor ? GetLatestTopics).mapTo[List[Topic]])
+        } ~
         path(Segment / "posts") { topic_id =>
           val uuid = UUID.fromString(topic_id)
           complete((postActor ? GetPostsByTopicID(uuid)).mapTo[List[Post]])

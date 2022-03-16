@@ -2,7 +2,7 @@ package com.foram.models
 
 import slick.jdbc.PostgresProfile.api._
 
-import java.time.{LocalDateTime, OffsetDateTime}
+import java.time.OffsetDateTime
 import java.util.UUID
 
 case class Post(id: UUID, user_id: UUID, username: String, topic_id: UUID, topic_slug: String, post_number: Int, content: String, created_at: OffsetDateTime, updated_at: OffsetDateTime)

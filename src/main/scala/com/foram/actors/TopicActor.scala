@@ -13,6 +13,8 @@ object TopicActor {
 
   case object GetAllTopics
 
+  case object GetLatestTopics
+
   case class GetTopicByID(id: UUID)
 
   case class GetTopicsByCategoryID(category_id: UUID)
@@ -36,13 +38,25 @@ class TopicActor extends Actor with ActorLogging {
 
   override def receive: Receive = {
     case GetAllTopics =>
-      println(s"Searching for topics")
+      println("Searching for topics")
       val topicsFuture = TopicsDao.findAll
       val originalSender = sender
       topicsFuture.onComplete {
         case Success(topics) => originalSender ! topics.toList
         case Failure(e) =>
           println("Topics not found")
+          e.printStackTrace()
+          originalSender ! e
+      }
+
+    case GetLatestTopics =>
+      println("Searching for latest topics")
+      val topicsFuture = TopicsDao.findLatest
+      val originalSender = sender
+      topicsFuture.onComplete {
+        case Success(topics) => originalSender ! topics.toList
+        case Failure(e) =>
+          println("Latest topics not found")
           e.printStackTrace()
           originalSender ! e
       }
