@@ -25,7 +25,7 @@ object UserActor {
 }
 
 
-class UserActor extends Actor with ActorLogging {
+class UserActor(UsersDao: UsersDao) extends Actor with ActorLogging {
 
   import UserActor._
 
