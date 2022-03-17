@@ -7,7 +7,7 @@ import java.util.UUID
 import scala.concurrent.Future
 
 // Singleton object for database transactions
-object UsersDao extends BaseDao {
+object UsersDao extends BaseDao with AbstractUsersDao {
   def findAll: Future[Seq[User]] = db.run(users.sortBy(_.createdAt.asc).result)
 
   def findById(id: UUID): Future[User] = db.run(users.filter(_.id === id).result.head)
@@ -21,7 +21,7 @@ object UsersDao extends BaseDao {
   def delete(id: UUID): Future[Int] = db.run(users.filter(_.id === id).delete)
 }
 
-trait UsersDao extends BaseDao {
+trait AbstractUsersDao extends BaseDao {
   def findAll: Future[Seq[User]]
 
   def findById(id: UUID): Future[User]
