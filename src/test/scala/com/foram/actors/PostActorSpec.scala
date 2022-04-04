@@ -68,7 +68,7 @@ class PostActorSpec extends TestKit(ActorSystem("MySpec"))
     }
 
     "respond to getPostsByUsername with a list of Posts" in {
-      val username = "Quincy Lars"
+      val username = "quince"
       (mockPostsDao.findByUsername _).when(username).returns(Future(Seq(samplePost)))
 
       val postsFuture = postActor ? PostActor.GetPostsByUsername(username)
@@ -76,7 +76,7 @@ class PostActorSpec extends TestKit(ActorSystem("MySpec"))
     }
 
     "respond to CreatePost with confirmation" in {
-      (mockPostsDao.create _).when(samplePost).returns(Future(java.util.UUID.randomUUID))
+      (mockPostsDao.create _).when(samplePost).returns(Future(samplePost.id))
 
       val postFuture = postActor ? PostActor.CreatePost(samplePost)
       postFuture map { success =>

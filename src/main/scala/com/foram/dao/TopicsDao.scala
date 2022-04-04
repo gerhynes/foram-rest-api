@@ -7,7 +7,7 @@ import java.util.UUID
 import scala.concurrent.Future
 
 // Singleton object for database transactions
-object TopicsDao extends BaseDao {
+object TopicsDao extends BaseDao with AbstractTopicsDao {
   def findAll: Future[Seq[Topic]] = db.run(topics.sortBy(_.createdAt.asc).result)
 
   def findLatest: Future[Seq[Topic]] = db.run(topics.sortBy(_.createdAt.desc).take(10).result)
@@ -28,7 +28,7 @@ object TopicsDao extends BaseDao {
 }
 
 // trait for mocking purposes
-trait TopicsDao extends BaseDao {
+trait AbstractTopicsDao extends BaseDao {
   def findAll: Future[Seq[Topic]]
 
   def findLatest: Future[Seq[Topic]]
