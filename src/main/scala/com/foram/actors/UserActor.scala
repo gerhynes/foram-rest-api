@@ -1,7 +1,7 @@
 package com.foram.actors
 
 import akka.actor.{Actor, ActorLogging}
-import com.foram.dao.UsersDao
+import com.foram.dao.{AbstractUsersDao, UsersDao}
 import com.foram.models.User
 
 import java.util.UUID
@@ -25,14 +25,14 @@ object UserActor {
 }
 
 
-class UserActor extends Actor with ActorLogging {
+class UserActor(usersDao: AbstractUsersDao) extends Actor with ActorLogging {
 
   import UserActor._
 
   override def receive: Receive = {
     case GetAllUsers =>
       println(s"Searching for users")
-      val usersFuture = UsersDao.findAll
+      val usersFuture = usersDao.findAll
       val originalSender = sender
       usersFuture.onComplete {
         case Success(users) => originalSender ! users.toList
@@ -44,7 +44,7 @@ class UserActor extends Actor with ActorLogging {
 
     case GetUserByID(id) =>
       println(s"Finding user with id: $id")
-      val userFuture = UsersDao.findById(id)
+      val userFuture = usersDao.findById(id)
       val originalSender = sender
       userFuture.onComplete {
         case Success(user) => originalSender ! user
@@ -56,7 +56,7 @@ class UserActor extends Actor with ActorLogging {
 
     case GetUserByUsername(username) =>
       println(s"Finding user with username: $username")
-      val userFuture = UsersDao.findByUsername(username)
+      val userFuture = usersDao.findByUsername(username)
       val originalSender = sender
       userFuture.onComplete {
         case Success(user) => originalSender ! user
@@ -68,7 +68,7 @@ class UserActor extends Actor with ActorLogging {
 
     case CreateUser(user) =>
       println(s"Creating user $user")
-      val userFuture = UsersDao.create(user)
+      val userFuture = usersDao.create(user)
       val originalSender = sender
       userFuture.onComplete {
         case Success(user) => originalSender ! ActionPerformed(s"User ${user} created.")
@@ -80,7 +80,7 @@ class UserActor extends Actor with ActorLogging {
 
     case UpdateUser(id, user) =>
       println(s"Updating user $user")
-      val userFuture = UsersDao.update(id, user)
+      val userFuture = usersDao.update(id, user)
       val originalSender = sender
       userFuture.onComplete {
         case Success(success) => originalSender ! ActionPerformed(s"User $id updated")
@@ -92,7 +92,7 @@ class UserActor extends Actor with ActorLogging {
 
     case DeleteUser(id) =>
       println(s"Removing user id $id")
-      val userFuture = UsersDao.delete(id)
+      val userFuture = usersDao.delete(id)
       val originalSender = sender
       userFuture.onComplete {
         case Success(success) => originalSender ! ActionPerformed(s"User $id deleted")

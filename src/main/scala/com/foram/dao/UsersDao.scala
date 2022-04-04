@@ -6,7 +6,8 @@ import slick.jdbc.PostgresProfile.api._
 import java.util.UUID
 import scala.concurrent.Future
 
-object UsersDao extends BaseDao {
+// Singleton object for database transactions
+object UsersDao extends BaseDao with AbstractUsersDao {
   def findAll: Future[Seq[User]] = db.run(users.sortBy(_.createdAt.asc).result)
 
   def findById(id: UUID): Future[User] = db.run(users.filter(_.id === id).result.head)
@@ -18,4 +19,18 @@ object UsersDao extends BaseDao {
   def update(id: UUID, user: User): Future[Int] = db.run(users.filter(_.id === user.id).update(user))
 
   def delete(id: UUID): Future[Int] = db.run(users.filter(_.id === id).delete)
+}
+
+trait AbstractUsersDao extends BaseDao {
+  def findAll: Future[Seq[User]]
+
+  def findById(id: UUID): Future[User]
+
+  def findByUsername(username: String): Future[User]
+
+  def create(user: User): Future[UUID]
+
+  def update(id: UUID, user: User): Future[Int]
+
+  def delete(id: UUID): Future[Int]
 }

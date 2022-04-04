@@ -4,6 +4,7 @@ import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import com.foram.actors._
+import com.foram.dao.{CategoriesDao, PostsDao, TopicsDao, UsersDao}
 import com.foram.routes._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -15,10 +16,10 @@ object Main extends App {
   implicit val materializer = ActorMaterializer()
 
   // Set up actors
-  val categoryActor = system.actorOf(Props[CategoryActor], "categoryActor")
-  val userActor = system.actorOf(Props[UserActor], "userActor")
-  val topicActor = system.actorOf(Props[TopicActor], "topicActor")
-  val postActor = system.actorOf(Props[PostActor], "postActor")
+  val categoryActor = system.actorOf(Props (new CategoryActor(CategoriesDao)), "categoryActor")
+  val userActor = system.actorOf(Props (new UserActor(UsersDao)), "userActor")
+  val topicActor = system.actorOf(Props (new TopicActor(TopicsDao)), "topicActor")
+  val postActor = system.actorOf(Props (new PostActor(PostsDao)), "postActor")
 
   // Get all routes
   val routes = MainRouter.routes
