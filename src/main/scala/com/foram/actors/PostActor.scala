@@ -1,7 +1,7 @@
 package com.foram.actors
 
 import akka.actor.{Actor, ActorLogging, Props}
-import com.foram.dao.PostsDao
+import com.foram.dao.{AbstractPostsDao, PostsDao}
 import com.foram.models.Post
 
 import java.util.UUID
@@ -30,7 +30,7 @@ object PostActor {
   def props = Props[PostActor]
 }
 
-class PostActor extends Actor with ActorLogging {
+class PostActor(postsDao: AbstractPostsDao) extends Actor with ActorLogging {
 
   import PostActor._
 
