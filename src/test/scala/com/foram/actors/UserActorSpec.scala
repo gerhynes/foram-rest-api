@@ -1,6 +1,6 @@
 package com.foram.actors
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
@@ -29,11 +29,11 @@ class UserActorSpec extends TestKit(ActorSystem("MySpec"))
     TestKit.shutdownActorSystem(system)
   }
 
-  val sampleUser = User(UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Quincy Lars", "quince", "qlars@example.com", OffsetDateTime.parse("2022-02-20T06:30:00.166Z"), OffsetDateTime.parse("2022-02-20T06:30:00.166Z"))
-  val mockUsersDao = stub[AbstractUsersDao]
-  val userActor = system.actorOf(Props(new UserActor(mockUsersDao)), "userActor")
+  val sampleUser: User = User(UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Quincy Lars", "quince", "qlars@example.com", OffsetDateTime.parse("2022-02-20T06:30:00.166Z"), OffsetDateTime.parse("2022-02-20T06:30:00.166Z"))
+  val mockUsersDao: AbstractUsersDao = stub[AbstractUsersDao]
+  val userActor: ActorRef = system.actorOf(Props(new UserActor(mockUsersDao)), "userActor")
 
-  implicit val timeout = Timeout(5 seconds)
+  implicit val timeout: Timeout = Timeout(5 seconds)
 
   "A UserActor" must {
     "respond to getAllUsers with a list of Users" in {
@@ -42,7 +42,7 @@ class UserActorSpec extends TestKit(ActorSystem("MySpec"))
       val usersFuture = userActor ? UserActor.GetAllUsers
       usersFuture map { users => assert(users === List[User](sampleUser)) }
     }
-    
+
     "respond to getUserByID with a single User" in {
       val uuid = UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672")
       (mockUsersDao.findById _).when(uuid).returns(Future(sampleUser))

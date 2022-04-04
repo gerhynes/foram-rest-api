@@ -1,7 +1,7 @@
 package com.foram.actors
 
 import akka.actor.{Actor, ActorLogging, Props}
-import com.foram.dao.{CategoriesDao, PostsDao, TopicsDao}
+import com.foram.dao.{AbstractCategoriesDao, CategoriesDao, PostsDao, TopicsDao}
 import com.foram.models.{Category, NewCategory}
 
 import java.util.UUID
@@ -24,7 +24,7 @@ object CategoryActor {
   def props = Props[CategoryActor]
 }
 
-class CategoryActor extends Actor with ActorLogging {
+class CategoryActor(categoriesDao: AbstractCategoriesDao) extends Actor with ActorLogging {
 
   import CategoryActor._
 
