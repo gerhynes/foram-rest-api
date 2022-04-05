@@ -88,9 +88,9 @@ class TopicActorSpec extends TestKit(ActorSystem("MySpec"))
       (mockTopicsDao.create _).when(sampleTopic).returns(Future(sampleNewTopic.id))
 
       val topicFuture = topicActor ? TopicActor.CreateTopic(sampleNewTopic)
-      topicFuture map { success =>
-        assert(success === ActionPerformed)
-        expectMsg("Topic created")
+      topicFuture map { result =>
+        assert(result === ActionPerformed)
+        expectMsg(s"Topic $result._1 and post $result._2 created.")
       }
     }
 
@@ -101,7 +101,7 @@ class TopicActorSpec extends TestKit(ActorSystem("MySpec"))
       val topicFuture = topicActor ? TopicActor.UpdateTopic(uuid, sampleTopic)
       topicFuture map { success =>
         assert(success === ActionPerformed)
-        expectMsg("Post updated")
+        expectMsg(s"Topic $uuid updated")
       }
     }
 
@@ -112,7 +112,7 @@ class TopicActorSpec extends TestKit(ActorSystem("MySpec"))
       val topicFuture = topicActor ? TopicActor.DeleteTopic(uuid)
       topicFuture map { success =>
         assert(success === ActionPerformed)
-        expectMsg("Topic deleted")
+        expectMsg(s"Topic $uuid deleted")
       }
     }
   }

@@ -81,7 +81,7 @@ class PostActorSpec extends TestKit(ActorSystem("MySpec"))
       val postFuture = postActor ? PostActor.CreatePost(samplePost)
       postFuture map { success =>
         assert(success === ActionPerformed)
-        expectMsg("Post created")
+        expectMsg(s"Post $samplePost created.")
       }
     }
 
@@ -92,7 +92,7 @@ class PostActorSpec extends TestKit(ActorSystem("MySpec"))
       val postFuture = postActor ? PostActor.UpdatePost(uuid, samplePost)
       postFuture map { success =>
         assert(success === ActionPerformed)
-        expectMsg("Post updated")
+        expectMsg(s"Post $uuid updated")
       }
     }
 
@@ -103,7 +103,7 @@ class PostActorSpec extends TestKit(ActorSystem("MySpec"))
       val postFuture = postActor ? PostActor.DeletePost(uuid)
       postFuture map { success =>
         assert(success === ActionPerformed)
-        expectMsg("Post deleted")
+        expectMsg(s"Post $uuid deleted")
       }
     }
   }

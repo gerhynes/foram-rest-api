@@ -35,7 +35,7 @@ class UserActorSpec extends TestKit(ActorSystem("MySpec"))
 
   implicit val timeout: Timeout = Timeout(5 seconds)
 
-  "A UserActor" must {
+  "A UserActor" should {
     "respond to getAllUsers with a list of Users" in {
       (mockUsersDao.findAll _).when().returns(Future(Seq(sampleUser)))
 
@@ -52,7 +52,7 @@ class UserActorSpec extends TestKit(ActorSystem("MySpec"))
     }
 
     "respond to getUserByUsername with a single User" in {
-      val username = "Quincy Lars"
+      val username = "quince"
       (mockUsersDao.findByUsername _).when(username).returns(Future(sampleUser))
 
       val userFuture = userActor ? UserActor.GetUserByUsername(username)
@@ -65,7 +65,7 @@ class UserActorSpec extends TestKit(ActorSystem("MySpec"))
       val userFuture = userActor ? UserActor.CreateUser(sampleUser)
       userFuture map { success =>
         assert(success === ActionPerformed)
-        expectMsg("User created")
+        expectMsg(s"User $sampleUser created.")
       }
     }
 
@@ -76,7 +76,7 @@ class UserActorSpec extends TestKit(ActorSystem("MySpec"))
       val userFuture = userActor ? UserActor.UpdateUser(uuid, sampleUser)
       userFuture map { success =>
         assert(success === ActionPerformed)
-        expectMsg("User updated")
+        expectMsg(s"User $uuid updated")
       }
     }
 
@@ -87,7 +87,7 @@ class UserActorSpec extends TestKit(ActorSystem("MySpec"))
       val userFuture = userActor ? UserActor.DeleteUser(uuid)
       userFuture map { success =>
         assert(success === ActionPerformed)
-        expectMsg("User deleted")
+        expectMsg(s"User $uuid deleted")
       }
     }
   }

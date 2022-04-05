@@ -102,7 +102,7 @@ class CategoryActor(categoriesDao: AbstractCategoriesDao) extends Actor with Act
       val categoryFuture = CategoriesDao.delete(id)
       val originalSender = sender
       categoryFuture.onComplete {
-        case Success(success) => originalSender ! ActionPerformed(s"Category id $id deleted")
+        case Success(success) => originalSender ! ActionPerformed(s"Category $id deleted")
         case Failure(e) =>
           println(s"Unable to delete category id $id")
           e.printStackTrace()
