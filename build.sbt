@@ -27,5 +27,6 @@ libraryDependencies ++= Seq(
   "com.typesafe.slick" %% "slick-hikaricp" % "3.3.3",
   "org.postgresql" % "postgresql" % "42.3.3",
   // CORS
-  "ch.megard" %% "akka-http-cors" % "1.1.3"
+  "ch.megard" %% "akka-http-cors" % "1.1.3",
+  "com.github.t3hnar" %% "scala-bcrypt" % "4.3.0"
 )

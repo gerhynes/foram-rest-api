@@ -32,9 +32,9 @@ object SeedDB extends App {
       (users.schema ++ categories.schema ++ topics.schema ++ posts.schema).createIfNotExists,
 
       // Insert users
-      users += User(userIds._1, "Quincy Lars", "quince", "qlars@example.com", OffsetDateTime.parse("2022-02-20T06:30:00.166z"), OffsetDateTime.parse("2022-02-20T06:30:00.166z")),
-      users += User(userIds._2, "Beatriz Stephanie", "beetz", "beetz@example.com", OffsetDateTime.parse("2022-02-20T06:35:00.155z"), OffsetDateTime.parse("2022-02-20T06:35:00.155z")),
-      users += User(userIds._3, "Naz Mahmood", "naziyah", "nazmahmood@example.com", OffsetDateTime.parse("2022-02-20T06:45:00.155z"), OffsetDateTime.parse("2022-02-20T06:45:00.155z")),
+      users += User(userIds._1, "Quincy Lars", "quince", "qlars@example.com", Hash.hashPassword("password123"), "admin", OffsetDateTime.parse("2022-02-20T06:30:00.166z"), OffsetDateTime.parse("2022-02-20T06:30:00.166z")),
+      users += User(userIds._2, "Beatriz Stephanie", "beetz", "beetz@example.com", Hash.hashPassword("password123"), "admin", OffsetDateTime.parse("2022-02-20T06:35:00.155z"), OffsetDateTime.parse("2022-02-20T06:35:00.155z")),
+      users += User(userIds._3, "Naz Mahmood", "naziyah", "nazmahmood@example.com", Hash.hashPassword("password123"), "admin", OffsetDateTime.parse("2022-02-20T06:45:00.155z"), OffsetDateTime.parse("2022-02-20T06:45:00.155z")),
 
       // Insert categories
       categories += Category(categoryIds._1, "JavaScript", "javascript", userIds._1, "Ask questions and share tips for JavaScript, React, Node - anything to do with the JavaScript ecosystem.", OffsetDateTime.parse("2022-02-20T07:30:00.155z"), OffsetDateTime.parse("2022-02-20T07:30:00.155z")),

@@ -46,7 +46,7 @@ object JsonFormats {
   implicit val postFormat = jsonFormat9(Post)
   implicit val newCategoryFormat = jsonFormat9(NewCategory)
   implicit val newTopicFormat = jsonFormat10(NewTopic)
-  implicit val userFormat = jsonFormat6(User)
+  implicit val userFormat = jsonFormat8(User)
 }
 
 
