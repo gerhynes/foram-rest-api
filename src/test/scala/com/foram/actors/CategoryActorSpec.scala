@@ -59,9 +59,9 @@ class CategoryActorSpec extends TestKit(ActorSystem("MySpec"))
       (mockCategoriesDao.create _).when(sampleCategory).returns(Future(sampleCategory.id))
 
       val categoryFuture = categoryActor ? CategoryActor.CreateCategory(sampleNewCategory)
-      categoryFuture map { success =>
-        assert(success === ActionPerformed)
-        expectMsg("Category created")
+      categoryFuture map { result =>
+        assert(result === ActionPerformed)
+        expectMsg(s"Category $result._1, topic $result._2, post $result._3 created.")
       }
     }
 
@@ -72,7 +72,7 @@ class CategoryActorSpec extends TestKit(ActorSystem("MySpec"))
       val categoryFuture = categoryActor ? CategoryActor.UpdateCategory(uuid, sampleCategory)
       categoryFuture map { success =>
         assert(success === ActionPerformed)
-        expectMsg("Category updated")
+        expectMsg(s"Category $uuid updated")
       }
     }
 
@@ -83,7 +83,7 @@ class CategoryActorSpec extends TestKit(ActorSystem("MySpec"))
       val categoryFuture = categoryActor ? CategoryActor.DeleteCategory(uuid)
       categoryFuture map { success =>
         assert(success === ActionPerformed)
-        expectMsg("Category deleted")
+        expectMsg(s"Category $uuid deleted")
       }
     }
   }
