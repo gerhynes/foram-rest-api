@@ -28,5 +28,7 @@ libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.3.3",
   // CORS
   "ch.megard" %% "akka-http-cors" % "1.1.3",
-  "com.github.t3hnar" %% "scala-bcrypt" % "4.3.0"
+  // Auth
+  "com.github.t3hnar" %% "scala-bcrypt" % "4.3.0",
+  "com.github.jwt-scala" %% "jwt-spray-json" % "9.0.2"
 )

@@ -2,8 +2,10 @@ package com.foram.models
 
 import slick.jdbc.PostgresProfile.api._
 
-import java.time.{LocalDateTime, OffsetDateTime}
+import java.time.OffsetDateTime
 import java.util.UUID
+
+case class LoginRequest(username: String, password: String)
 
 case class User(id: UUID, name: String, username: String, email: String, password: String, role: String, created_at: OffsetDateTime, updated_at: OffsetDateTime)
 
