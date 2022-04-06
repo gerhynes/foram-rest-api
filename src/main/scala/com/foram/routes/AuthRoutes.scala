@@ -9,7 +9,7 @@ import akka.util.Timeout
 import com.foram.Main.userActor
 import com.foram.actors.UserActor.GetUserByUsername
 import com.foram.auth.Auth.{createToken, validatePassword}
-import com.foram.models.{LoginRequest, User}
+import com.foram.models.{LoginRequest, RegisteredUser, User}
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
@@ -28,8 +28,12 @@ object AuthRoutes {
             case Success(user) =>
               if (validatePassword(password, user.password)) {
                 val token = createToken(username, 1)
+                // Add token to user
+                val registeredUser = user match {
+                  case User(id, name, username, email, password, role, created_at, updated_at) => RegisteredUser(id, name, username, email, password, role, created_at, updated_at, token)
+                }
                 respondWithHeader(RawHeader("Access-Token", token)) {
-                  complete(HttpResponse(status = StatusCodes.OK, entity = "Logged in successfully"))
+                  complete(StatusCodes.OK, registeredUser)
                 }
               } else {
                 complete(HttpResponse(status = StatusCodes.Unauthorized, entity = "Incorrect username or password"))
