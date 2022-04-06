@@ -5,9 +5,9 @@ import akka.pattern.ask
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
 import com.foram.actors.PostActor.ActionPerformed
+import com.foram.auth.Auth
 import com.foram.dao.AbstractPostsDao
 import com.foram.models.{Post, User}
-import com.foram.utils.Auth
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers

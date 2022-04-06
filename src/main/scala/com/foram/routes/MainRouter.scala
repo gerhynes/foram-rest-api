@@ -7,6 +7,7 @@ import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 
 object MainRouter {
 
+  val authRoutes: Route = AuthRoutes.routes
   val categoryRoutes: Route = CategoryRoutes.routes
   val userRoutes: Route = UserRoutes.routes
   val topicRoutes: Route = TopicRoutes.routes
@@ -30,7 +31,7 @@ object MainRouter {
   val routes: Route = {
     cors() {
       handleErrors {
-        concat(categoryRoutes, userRoutes, topicRoutes, postRoutes)
+        concat(authRoutes, categoryRoutes, userRoutes, topicRoutes, postRoutes)
       }
     }
   }

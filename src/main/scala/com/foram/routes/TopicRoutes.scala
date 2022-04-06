@@ -9,7 +9,8 @@ import akka.util.Timeout
 import com.foram.Main.{postActor, topicActor}
 import com.foram.actors.PostActor._
 import com.foram.actors.TopicActor._
-import com.foram.models.{Post, Topic, NewTopic}
+import com.foram.auth.Auth.authenticated
+import com.foram.models.{NewTopic, Post, Topic}
 import spray.json.DefaultJsonProtocol._
 
 import java.util.UUID
@@ -28,10 +29,10 @@ object TopicRoutes {
         path("latest") {
           complete((topicActor ? GetLatestTopics).mapTo[List[Topic]])
         } ~
-        path(Segment / "posts") { topic_id =>
-          val uuid = UUID.fromString(topic_id)
-          complete((postActor ? GetPostsByTopicID(uuid)).mapTo[List[Post]])
-        } ~
+          path(Segment / "posts") { topic_id =>
+            val uuid = UUID.fromString(topic_id)
+            complete((postActor ? GetPostsByTopicID(uuid)).mapTo[List[Post]])
+          } ~
           path(Segment) { id =>
             val uuid = UUID.fromString(id)
             complete((topicActor ? GetTopicByID(uuid)).mapTo[Topic])
@@ -40,24 +41,27 @@ object TopicRoutes {
             complete((topicActor ? GetAllTopics).mapTo[List[Topic]])
           }
       } ~
-        post {
-          entity(as[NewTopic]) { newTopic =>
-            complete((topicActor ? CreateTopic(newTopic)).map(_ => StatusCodes.Created))
-          }
-        } ~
-        put {
-          path(Segment) { id =>
-            val uuid = UUID.fromString(id)
-            entity(as[Topic]) { topic =>
-              complete((topicActor ? UpdateTopic(uuid, topic)).map(_ => StatusCodes.OK))
+        authenticated { claims => {
+          post {
+            entity(as[NewTopic]) { newTopic =>
+              complete((topicActor ? CreateTopic(newTopic)).map(_ => StatusCodes.Created))
             }
-          }
-        } ~
-        delete {
-          path(Segment) { id =>
-            val uuid = UUID.fromString(id)
-            complete((topicActor ? DeleteTopic(uuid)).map(_ => StatusCodes.OK))
-          }
+          } ~
+            put {
+              path(Segment) { id =>
+                val uuid = UUID.fromString(id)
+                entity(as[Topic]) { topic =>
+                  complete((topicActor ? UpdateTopic(uuid, topic)).map(_ => StatusCodes.OK))
+                }
+              }
+            } ~
+            delete {
+              path(Segment) { id =>
+                val uuid = UUID.fromString(id)
+                complete((topicActor ? DeleteTopic(uuid)).map(_ => StatusCodes.OK))
+              }
+            }
+        }
         }
     }
 }

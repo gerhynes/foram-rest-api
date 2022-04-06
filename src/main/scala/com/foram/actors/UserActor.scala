@@ -1,9 +1,9 @@
 package com.foram.actors
 
 import akka.actor.{Actor, ActorLogging}
+import com.foram.auth.Auth
 import com.foram.dao.{AbstractUsersDao, UsersDao}
 import com.foram.models.User
-import com.foram.utils.Auth
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global

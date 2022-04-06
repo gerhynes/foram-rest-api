@@ -1,14 +1,13 @@
-package com.foram.utils
+package com.foram.auth
 
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directive1
-import akka.http.scaladsl.server.Directives.optionalHeaderValueByName
+import akka.http.scaladsl.server.Directives.{complete, optionalHeaderValueByName, provide}
 import com.github.t3hnar.bcrypt._
 import pdi.jwt.{JwtAlgorithm, JwtClaim, JwtSprayJson}
-import akka.http.scaladsl.server.Directives._
 
 import java.util.concurrent.TimeUnit
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Success}
 
 object Auth {
   val algorithm = JwtAlgorithm.HS256
@@ -24,7 +23,7 @@ object Auth {
 
   def validatePassword(password: String, hash: String): Boolean = {
     password.isBcryptedSafeBounded(hash) match {
-      case Success(result) => true
+      case Success(result) => result
       case Failure(failure) => false
     }
   }

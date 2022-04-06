@@ -1,5 +1,6 @@
 package com.foram.utils
 
+import com.foram.auth.Auth
 import com.foram.models._
 import slick.jdbc.PostgresProfile.api._
 

@@ -11,6 +11,7 @@ import com.foram.actors.PostActor._
 import com.foram.actors.TopicActor._
 import com.foram.actors.UserActor._
 import com.foram.models.{Post, Topic, User}
+import com.foram.auth.Auth.authenticated
 import spray.json.DefaultJsonProtocol._
 
 import java.util.UUID
@@ -39,23 +40,26 @@ object UserRoutes {
             complete((userActor ? GetAllUsers).mapTo[List[User]])
           }
       } ~
-        post {
-          entity(as[User]) { user =>
-            complete((userActor ? CreateUser(user)).map(_ => StatusCodes.Created))
-          }
-        } ~
-        put {
-          path(Segment) { id =>
-            val uuid = UUID.fromString(id)
+        authenticated { claims => {
+          post {
             entity(as[User]) { user =>
-              complete((userActor ? UpdateUser(uuid, user)).map(_ => StatusCodes.OK))
+              complete((userActor ? CreateUser(user)).map(_ => StatusCodes.Created))
             }
-          }
-        } ~
-        delete {
-          path(Segment) { id =>
-            complete((userActor ? DeleteUser(UUID.fromString(id))).map(_ => StatusCodes.OK))
-          }
+          } ~
+            put {
+              path(Segment) { id =>
+                val uuid = UUID.fromString(id)
+                entity(as[User]) { user =>
+                  complete((userActor ? UpdateUser(uuid, user)).map(_ => StatusCodes.OK))
+                }
+              }
+            } ~
+            delete {
+              path(Segment) { id =>
+                complete((userActor ? DeleteUser(UUID.fromString(id))).map(_ => StatusCodes.OK))
+              }
+            }
+        }
         }
     }
 }
