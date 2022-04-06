@@ -1,7 +1,11 @@
 package com.foram.utils
 
+import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
+import akka.http.scaladsl.server.Directive1
+import akka.http.scaladsl.server.Directives.optionalHeaderValueByName
 import com.github.t3hnar.bcrypt._
 import pdi.jwt.{JwtAlgorithm, JwtClaim, JwtSprayJson}
+import akka.http.scaladsl.server.Directives._
 
 import java.util.concurrent.TimeUnit
 import scala.util.{Failure, Success, Try}
@@ -42,5 +46,25 @@ object Auth {
   }
 
   def isTokenValid(token: String): Boolean = JwtSprayJson.isValid(token, secretKey, Seq(algorithm))
+
+  def authenticated: Directive1[String] = {
+    optionalHeaderValueByName("Authorization").flatMap {
+      case Some(token) =>
+        if (isTokenValid(token)) {
+          if (isTokenExpired(token)) {
+            complete(HttpResponse(status = StatusCodes.Unauthorized, entity = "Token expired"))
+          } else {
+            JwtSprayJson.decode(token, secretKey, Seq(algorithm)) match {
+              case Success(claims) => provide(claims.content)
+              case Failure(failure) =>
+                complete(HttpResponse(status = StatusCodes.Unauthorized, entity = "Token is invalid, or has been tampered with"))
+            }
+          }
+        } else {
+          complete(HttpResponse(status = StatusCodes.Unauthorized, entity = "Token is invalid, or has been tampered with"))
+        }
+      case _ => complete(HttpResponse(status = StatusCodes.Unauthorized, entity = "No token was provided"))
+    }
+  }
 
 }
