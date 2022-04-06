@@ -13,7 +13,6 @@ object Auth {
   val algorithm = JwtAlgorithm.HS256
   val secretKey = "thisshouldbeabettersecret"
 
-
   def hashPassword(value: String): String = {
     value.bcryptSafeBounded match {
       case Success(result) => result

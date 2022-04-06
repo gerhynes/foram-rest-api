@@ -1,7 +1,7 @@
 package com.foram
 
 import com.foram.models._
-import spray.json.{DefaultJsonProtocol, DeserializationException, JsString, JsValue, JsonFormat, deserializationError}
+import spray.json.{DefaultJsonProtocol, DeserializationException, JsString, JsValue, JsonFormat, RootJsonFormat, deserializationError}
 
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -41,13 +41,14 @@ object JsonFormats {
       s"Expected date time in ISO offset local date time format ex. ${OffsetDateTime.now().format(formatter)}"
   }
 
-  implicit val categoryFormat = jsonFormat7(Category)
-  implicit val topicFormat = jsonFormat9(Topic)
-  implicit val postFormat = jsonFormat9(Post)
-  implicit val newCategoryFormat = jsonFormat9(NewCategory)
-  implicit val newTopicFormat = jsonFormat10(NewTopic)
-  implicit val userFormat = jsonFormat8(User)
-  implicit val loginRequestFormat = jsonFormat2(LoginRequest)
+  implicit val categoryFormat: RootJsonFormat[Category] = jsonFormat7(Category)
+  implicit val topicFormat: RootJsonFormat[Topic] = jsonFormat9(Topic)
+  implicit val postFormat: RootJsonFormat[Post] = jsonFormat9(Post)
+  implicit val newCategoryFormat: RootJsonFormat[NewCategory] = jsonFormat9(NewCategory)
+  implicit val newTopicFormat: RootJsonFormat[NewTopic] = jsonFormat10(NewTopic)
+  implicit val userFormat: RootJsonFormat[User] = jsonFormat8(User)
+  implicit val registeredUserFormat: RootJsonFormat[RegisteredUser] = jsonFormat9(RegisteredUser)
+  implicit val loginRequestFormat: RootJsonFormat[LoginRequest] = jsonFormat2(LoginRequest)
 }
 
 
