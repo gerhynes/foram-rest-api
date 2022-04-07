@@ -78,7 +78,7 @@ class CategoryActor(categoriesDao: AbstractCategoriesDao) extends Actor with Act
       } yield (category_id, topic_id, post_id)
 
       result.onComplete {
-        case Success(result) => originalSender ! ActionPerformed(s"Category $result._1, topic $result._2, post $result._3 created.")
+        case Success(result) => originalSender ! category
         case Failure(e) =>
           println(s"Unable to create category $category")
           e.printStackTrace()

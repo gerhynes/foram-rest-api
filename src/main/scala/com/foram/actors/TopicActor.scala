@@ -132,7 +132,7 @@ class TopicActor(topicsDao: AbstractTopicsDao) extends Actor with ActorLogging {
       } yield (topic_id, post_id)
 
       result.onComplete {
-        case Success(result) => originalSender ! ActionPerformed(s"Topic $result._1 and post $result._2 created.")
+        case Success(result) => originalSender ! topic
         case Failure(e) =>
           println(s"Unable to create topic $topic")
           e.printStackTrace()

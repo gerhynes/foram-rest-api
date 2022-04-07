@@ -48,7 +48,7 @@ object UserRoutes {
               respondWithHeader(RawHeader("Access-Token", registeredUser.token)) {
                 complete(StatusCodes.Created, registeredUser)
               }
-            case Failure(failure) => complete(StatusCodes.InternalServerError)
+            case Failure(ex) => complete(StatusCodes.InternalServerError)
           }
         }
       } ~

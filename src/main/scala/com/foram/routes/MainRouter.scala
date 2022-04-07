@@ -20,10 +20,10 @@ object MainRouter {
       complete(StatusCodes.NotFound, "Cannot find resource")
     case e: ClassCastException =>
       complete(StatusCodes.NotFound, "Incorrect resource returned")
-    case e: RuntimeException =>
-      complete(StatusCodes.NotFound, e.getMessage)
     case e: IllegalArgumentException =>
       complete(StatusCodes.BadRequest, "Illegal argument passed")
+    case e: RuntimeException =>
+      complete(StatusCodes.NotFound, e.getMessage)
   }
 
   val handleErrors: Directive[Unit] = handleRejections(rejectionHandler) & handleExceptions(exceptionHandler)

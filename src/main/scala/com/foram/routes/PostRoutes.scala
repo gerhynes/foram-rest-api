@@ -15,6 +15,7 @@ import spray.json.DefaultJsonProtocol._
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 object PostRoutes {
 
@@ -36,7 +37,10 @@ object PostRoutes {
         authenticated { claims => {
           post {
             entity(as[Post]) { post =>
-              complete((postActor ? CreatePost(post)).map(_ => StatusCodes.Created))
+              onComplete((postActor ? CreatePost(post)).mapTo[Post]) {
+                case Success(createdPost) => complete(StatusCodes.Created, createdPost)
+                case Failure(ex) => complete(StatusCodes.InternalServerError)
+              }
             }
           } ~
             put {

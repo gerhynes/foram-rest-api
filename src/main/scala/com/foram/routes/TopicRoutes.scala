@@ -16,6 +16,7 @@ import spray.json.DefaultJsonProtocol._
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 object TopicRoutes {
 
@@ -44,7 +45,10 @@ object TopicRoutes {
         authenticated { claims => {
           post {
             entity(as[NewTopic]) { newTopic =>
-              complete((topicActor ? CreateTopic(newTopic)).map(_ => StatusCodes.Created))
+              onComplete((topicActor ? CreateTopic(newTopic)).mapTo[Topic]) {
+                case Success(createdTopic) => complete(StatusCodes.Created, createdTopic)
+                case Failure(ex) => complete(StatusCodes.InternalServerError)
+              }
             }
           } ~
             put {

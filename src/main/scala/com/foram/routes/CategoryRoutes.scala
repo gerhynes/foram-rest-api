@@ -15,6 +15,7 @@ import spray.json.DefaultJsonProtocol._
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 object CategoryRoutes {
 
@@ -40,7 +41,10 @@ object CategoryRoutes {
         authenticated { claims => {
           post {
             entity(as[NewCategory]) { newCategory =>
-              complete((categoryActor ? CreateCategory(newCategory)).map(_ => StatusCodes.Created))
+              onComplete((categoryActor ? CreateCategory(newCategory)).mapTo[Category]) {
+                case Success(createdCategory) => complete(StatusCodes.Created, createdCategory)
+                case Failure(ex) => complete(StatusCodes.InternalServerError)
+              }
             }
           } ~
             put {

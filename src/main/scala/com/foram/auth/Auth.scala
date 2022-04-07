@@ -23,7 +23,7 @@ object Auth {
   def validatePassword(password: String, hash: String): Boolean = {
     password.isBcryptedSafeBounded(hash) match {
       case Success(result) => result
-      case Failure(failure) => false
+      case Failure(ex) => throw ex
     }
   }
 
@@ -40,7 +40,7 @@ object Auth {
 
   def isTokenExpired(token: String): Boolean = JwtSprayJson.decode(token, secretKey, Seq(algorithm)) match {
     case Success(claims) => claims.expiration.getOrElse(0L) < System.currentTimeMillis() / 1000
-    case Failure(failure) => true
+    case Failure(ex) => throw ex
   }
 
   def isTokenValid(token: String): Boolean = JwtSprayJson.isValid(token, secretKey, Seq(algorithm))
