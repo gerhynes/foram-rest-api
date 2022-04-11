@@ -30,5 +30,5 @@ libraryDependencies ++= Seq(
   "ch.megard" %% "akka-http-cors" % "1.1.3",
   // Auth
   "com.github.t3hnar" %% "scala-bcrypt" % "4.3.0",
-  "com.github.jwt-scala" %% "jwt-spray-json" % "9.0.2"
+  "com.github.jwt-scala" %% "jwt-core" % "9.0.5"
 )

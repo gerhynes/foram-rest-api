@@ -30,7 +30,7 @@ object AuthRoutes {
                 val token = createToken(username, 1)
                 // Add token to user
                 val registeredUser = user match {
-                  case User(id, name, username, email, password, role, created_at, updated_at) => RegisteredUser(id, name, username, email, password, role, created_at, updated_at, token)
+                  case User(id, name, username, email, password, role, created_at, updated_at) => RegisteredUser(id, name, username, email, role, created_at, updated_at, token)
                 }
                 respondWithHeader(RawHeader("Access-Token", token)) {
                   complete(StatusCodes.OK, registeredUser)

@@ -82,7 +82,7 @@ class UserActor(usersDao: AbstractUsersDao) extends Actor with ActorLogging {
         case Success(userId) =>
           // Log in created user
           val registeredUser = user match {
-            case User(id, name, username, email, password, role, created_at, updated_at) => RegisteredUser(id, name, username, email, password, role, created_at, updated_at, createToken(username, 1) )
+            case User(id, name, username, email, password, role, created_at, updated_at) => RegisteredUser(id, name, username, email, role, created_at, updated_at, createToken(username, 1) )
           }
           originalSender ! registeredUser
         case Failure(e) =>
