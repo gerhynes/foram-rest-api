@@ -5,6 +5,7 @@ import akka.pattern.ask
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
 import com.foram.actors.UserActor.ActionPerformed
+import com.foram.auth.Auth
 import com.foram.dao.AbstractUsersDao
 import com.foram.models.User
 import org.scalamock.scalatest.MockFactory
@@ -29,7 +30,7 @@ class UserActorSpec extends TestKit(ActorSystem("MySpec"))
     TestKit.shutdownActorSystem(system)
   }
 
-  val sampleUser: User = User(UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Quincy Lars", "quince", "qlars@example.com", OffsetDateTime.parse("2022-02-20T06:30:00.166Z"), OffsetDateTime.parse("2022-02-20T06:30:00.166Z"))
+  val sampleUser: User = User(UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Quincy Lars", "quince", "qlars@example.com", Auth.hashPassword("password123"), "admin", OffsetDateTime.parse("2022-02-20T06:30:00.166Z"), OffsetDateTime.parse("2022-02-20T06:30:00.166Z"))
   val mockUsersDao: AbstractUsersDao = stub[AbstractUsersDao]
   val userActor: ActorRef = system.actorOf(Props(new UserActor(mockUsersDao)), "userActor")
 

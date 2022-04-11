@@ -1,8 +1,10 @@
 package com.foram.actors
 
 import akka.actor.{Actor, ActorLogging}
+import com.foram.auth.Auth
+import com.foram.auth.Auth.createToken
 import com.foram.dao.{AbstractUsersDao, UsersDao}
-import com.foram.models.User
+import com.foram.models.{RegisteredUser, User}
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -66,12 +68,23 @@ class UserActor(usersDao: AbstractUsersDao) extends Actor with ActorLogging {
           originalSender ! e
       }
 
-    case CreateUser(user) =>
-      println(s"Creating user $user")
+    case CreateUser(rawUser) =>
+      println(s"Creating user $rawUser")
+
+      // Create new user with hashed password
+      val user = rawUser match {
+        case User(id, name, username, email, password, role, created_at, updated_at) => User(id, name, username, email, Auth.hashPassword(rawUser.password), role, created_at, updated_at)
+      }
+
       val userFuture = usersDao.create(user)
       val originalSender = sender
       userFuture.onComplete {
-        case Success(user) => originalSender ! ActionPerformed(s"User ${user} created.")
+        case Success(userId) =>
+          // Log in created user
+          val registeredUser = user match {
+            case User(id, name, username, email, password, role, created_at, updated_at) => RegisteredUser(id, name, username, email, role, created_at, updated_at, createToken(username, 1) )
+          }
+          originalSender ! registeredUser
         case Failure(e) =>
           println(s"User $user could not be created")
           e.printStackTrace()

@@ -8,12 +8,14 @@ import akka.util.Timeout
 import com.foram.Main.{categoryActor, topicActor}
 import com.foram.actors.CategoryActor._
 import com.foram.actors.TopicActor._
+import com.foram.auth.Auth.authenticated
 import com.foram.models.{Category, NewCategory, Topic}
 import spray.json.DefaultJsonProtocol._
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 object CategoryRoutes {
 
@@ -36,24 +38,30 @@ object CategoryRoutes {
             complete((categoryActor ? GetAllCategories).mapTo[List[Category]])
           }
       } ~
-        post {
-          entity(as[NewCategory]) { newCategory =>
-            complete((categoryActor ? CreateCategory(newCategory)).map(_ => StatusCodes.Created))
-          }
-        } ~
-        put {
-          path(Segment) { id =>
-            entity(as[Category]) { category =>
-              val uuid = UUID.fromString(id)
-              complete((categoryActor ? UpdateCategory(uuid, category)).map(_ => StatusCodes.OK))
+        authenticated { claims => {
+          post {
+            entity(as[NewCategory]) { newCategory =>
+              onComplete((categoryActor ? CreateCategory(newCategory)).mapTo[Category]) {
+                case Success(createdCategory) => complete(StatusCodes.Created, createdCategory)
+                case Failure(ex) => complete(StatusCodes.InternalServerError)
+              }
             }
-          }
-        } ~
-        delete {
-          path(Segment) { id =>
-            val uuid = UUID.fromString(id)
-            complete((categoryActor ? DeleteCategory(uuid)).map(_ => StatusCodes.OK))
-          }
+          } ~
+            put {
+              path(Segment) { id =>
+                entity(as[Category]) { category =>
+                  val uuid = UUID.fromString(id)
+                  complete((categoryActor ? UpdateCategory(uuid, category)).map(_ => StatusCodes.OK))
+                }
+              }
+            } ~
+            delete {
+              path(Segment) { id =>
+                val uuid = UUID.fromString(id)
+                complete((categoryActor ? DeleteCategory(uuid)).map(_ => StatusCodes.OK))
+              }
+            }
+        }
         }
     }
 }

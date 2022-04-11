@@ -8,12 +8,14 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.foram.Main.postActor
 import com.foram.actors.PostActor._
+import com.foram.auth.Auth.{authenticated, getUserDataFromClaims}
 import com.foram.models.Post
 import spray.json.DefaultJsonProtocol._
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 object PostRoutes {
 
@@ -32,24 +34,30 @@ object PostRoutes {
             complete((postActor ? GetAllPosts).mapTo[List[Post]])
           }
       } ~
-        post {
-          entity(as[Post]) { post =>
-            complete((postActor ? CreatePost(post)).map(_ => StatusCodes.Created))
-          }
-        } ~
-        put {
-          path(Segment) { id =>
-            val uuid = UUID.fromString(id)
+        authenticated { claims => {
+          post {
             entity(as[Post]) { post =>
-              complete((postActor ? UpdatePost(uuid, post)).map(_ => StatusCodes.OK))
+              onComplete((postActor ? CreatePost(post)).mapTo[Post]) {
+                case Success(createdPost) => complete(StatusCodes.Created, createdPost)
+                case Failure(ex) => complete(StatusCodes.InternalServerError)
+              }
             }
-          }
-        } ~
-        delete {
-          path(Segment) { id =>
-            val uuid = UUID.fromString(id)
-            complete((postActor ? DeletePost(uuid)).map(_ => StatusCodes.OK))
-          }
+          } ~
+            put {
+              path(Segment) { id =>
+                val uuid = UUID.fromString(id)
+                entity(as[Post]) { post =>
+                  complete((postActor ? UpdatePost(uuid, post)).map(_ => StatusCodes.OK))
+                }
+              }
+            } ~
+            delete {
+              path(Segment) { id =>
+                val uuid = UUID.fromString(id)
+                complete((postActor ? DeletePost(uuid)).map(_ => StatusCodes.OK))
+              }
+            }
+        }
         }
     }
 
