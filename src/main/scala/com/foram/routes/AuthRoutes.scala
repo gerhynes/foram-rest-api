@@ -1,7 +1,6 @@
 package com.foram.routes
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
-import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.pattern.ask
@@ -27,14 +26,12 @@ object AuthRoutes {
           onComplete((userActor ? GetUserByUsername(username)).mapTo[User]) {
             case Success(user) =>
               if (validatePassword(password, user.password)) {
-                val token = createToken(username, 1)
+                val token = createToken(username, 7)
                 // Add token to user
                 val registeredUser = user match {
                   case User(id, name, username, email, password, role, created_at, updated_at) => RegisteredUser(id, name, username, email, role, created_at, updated_at, token)
                 }
-                respondWithHeader(RawHeader("Access-Token", token)) {
-                  complete(StatusCodes.OK, registeredUser)
-                }
+                complete(StatusCodes.OK, registeredUser)
               } else {
                 complete(HttpResponse(status = StatusCodes.Unauthorized, entity = "Incorrect username or password"))
               }

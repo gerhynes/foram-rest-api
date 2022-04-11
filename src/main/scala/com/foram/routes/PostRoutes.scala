@@ -8,7 +8,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.foram.Main.postActor
 import com.foram.actors.PostActor._
-import com.foram.auth.Auth.authenticated
+import com.foram.auth.Auth.{authenticated, getUserDataFromClaims}
 import com.foram.models.Post
 import spray.json.DefaultJsonProtocol._
 

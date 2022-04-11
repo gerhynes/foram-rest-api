@@ -41,17 +41,14 @@ object UserRoutes {
             complete((userActor ? GetAllUsers).mapTo[List[User]])
           }
       } ~
-      post {
-        entity(as[User]) { user =>
-          onComplete((userActor ? CreateUser(user)).mapTo[RegisteredUser]) {
-            case Success(registeredUser) =>
-              respondWithHeader(RawHeader("Access-Token", registeredUser.token)) {
-                complete(StatusCodes.Created, registeredUser)
-              }
-            case Failure(ex) => complete(StatusCodes.InternalServerError)
+        post {
+          entity(as[User]) { user =>
+            onComplete((userActor ? CreateUser(user)).mapTo[RegisteredUser]) {
+              case Success(registeredUser) => complete(StatusCodes.Created, registeredUser)
+              case Failure(ex) => complete(StatusCodes.InternalServerError)
+            }
           }
-        }
-      } ~
+        } ~
         authenticated { claims => {
           put {
             path(Segment) { id =>

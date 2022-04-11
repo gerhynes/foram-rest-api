@@ -5,6 +5,7 @@ import akka.http.scaladsl.server.Directive1
 import akka.http.scaladsl.server.Directives.{complete, optionalHeaderValueByName, provide}
 import com.github.t3hnar.bcrypt._
 import pdi.jwt.{Jwt, JwtAlgorithm, JwtClaim}
+import scala.util.matching.Regex
 
 import java.time.Clock
 import java.util.concurrent.TimeUnit
@@ -32,7 +33,6 @@ object Auth {
 
   def createToken(username: String, expirationPeriodInDays: Int): String = {
     val usernameClaim = s"""{"username":"${username}"}"""
-
     Jwt.encode(JwtClaim({usernameClaim}).issuedNow.expiresIn(TimeUnit.DAYS.toSeconds(expirationPeriodInDays)), secretKey, algorithm)
   }
 
@@ -42,6 +42,12 @@ object Auth {
   }
 
   def isTokenValid(token: String): Boolean = Jwt.isValid(token, secretKey, Seq(algorithm))
+
+  def getUserDataFromClaims(claims: String): String = {
+    val pattern = "\"username\"[:]\"[A-Za-z0-9_-]+\"".r
+    val pattern(username) = claims
+    username.substring(11, -1)
+  }
 
   def authenticated: Directive1[String] = {
     optionalHeaderValueByName("Authorization").flatMap {
@@ -53,9 +59,7 @@ object Auth {
             complete(HttpResponse(status = StatusCodes.Unauthorized, entity = "Token expired"))
           } else {
             Jwt.decodeRaw(token, secretKey, Seq(algorithm)) match {
-              case Success(claims) =>
-                println(claims)
-                provide(claims)
+              case Success(claims) => provide(claims)
               case Failure(failure) =>
                 complete(HttpResponse(status = StatusCodes.Unauthorized, entity = "Token is invalid, or has been tampered with"))
             }
