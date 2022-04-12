@@ -30,15 +30,13 @@ object JsonFormats {
 
     override def read(json: JsValue): OffsetDateTime = {
       json match {
-        case JsString(lTString) =>
-          Try(OffsetDateTime.parse(lTString, formatter)).getOrElse(deserializationError(deserializationErrorMessage))
+        case JsString(lTString) => Try(OffsetDateTime.parse(lTString, formatter)).getOrElse(deserializationError(deserializationErrorMessage))
         case _ => deserializationError(deserializationErrorMessage)
       }
     }
 
     private val formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
-    private val deserializationErrorMessage =
-      s"Expected date time in ISO offset local date time format ex. ${OffsetDateTime.now().format(formatter)}"
+    private val deserializationErrorMessage = s"Expected date time in ISO offset local date time format ex. ${OffsetDateTime.now().format(formatter)}"
   }
 
   implicit val categoryFormat: RootJsonFormat[Category] = jsonFormat7(Category)

@@ -22,7 +22,7 @@ object Main extends App {
   val postActor = system.actorOf(Props (new PostActor(PostsDao)), "postActor")
 
   // Get all routes
-  val routes = MainRouter.routes
+  val routes = new MainRouter(categoryActor, userActor, topicActor, postActor).routes
 
   // Bind server
   val bindingFuture = Http().newServerAt("localhost", 8080).bind(routes)

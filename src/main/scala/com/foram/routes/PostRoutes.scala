@@ -1,14 +1,13 @@
 package com.foram.routes
 
+import akka.actor.ActorRef
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.ExceptionHandler
 import akka.pattern.ask
 import akka.util.Timeout
-import com.foram.Main.postActor
 import com.foram.actors.PostActor._
-import com.foram.auth.Auth.{authenticated, getUserDataFromClaims}
+import com.foram.auth.Auth.authenticated
 import com.foram.models.Post
 import spray.json.DefaultJsonProtocol._
 
@@ -17,7 +16,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
-object PostRoutes {
+class PostRoutes(postActor: ActorRef) {
 
   import com.foram.JsonFormats._
 

@@ -1,11 +1,11 @@
 package com.foram.routes
 
+import akka.actor.ActorRef
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.pattern.ask
 import akka.util.Timeout
-import com.foram.Main.userActor
 import com.foram.actors.UserActor.GetUserByUsername
 import com.foram.auth.Auth.{createToken, validatePassword}
 import com.foram.models.{LoginRequest, RegisteredUser, User}
@@ -13,7 +13,7 @@ import com.foram.models.{LoginRequest, RegisteredUser, User}
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
-object AuthRoutes {
+class AuthRoutes(userActor: ActorRef) {
 
   import com.foram.JsonFormats._
 
