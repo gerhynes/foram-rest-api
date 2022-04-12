@@ -15,6 +15,7 @@ import org.scalatest.wordspec.AnyWordSpecLike
 
 import java.time.OffsetDateTime
 import java.util.UUID
+import java.util.UUID.randomUUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -30,7 +31,7 @@ class UserActorSpec extends TestKit(ActorSystem("MySpec"))
     TestKit.shutdownActorSystem(system)
   }
 
-  val sampleUser: User = User(UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Quincy Lars", "quince", "qlars@example.com", Auth.hashPassword("password123"), "admin", OffsetDateTime.parse("2022-02-20T06:30:00.166Z"), OffsetDateTime.parse("2022-02-20T06:30:00.166Z"))
+  val sampleUser: User = User(randomUUID(), "Quincy Lars", "quincy", "qlars@example.com", Auth.hashPassword("password123"), "admin", OffsetDateTime.now(), OffsetDateTime.now())
   val mockUsersDao: AbstractUsersDao = stub[AbstractUsersDao]
   val userActor: ActorRef = system.actorOf(Props(new UserActor(mockUsersDao)), "userActor")
 
