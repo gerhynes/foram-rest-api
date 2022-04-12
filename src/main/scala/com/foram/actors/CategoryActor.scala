@@ -2,7 +2,7 @@ package com.foram.actors
 
 import akka.actor.{Actor, ActorLogging, Props}
 import com.foram.dao.{AbstractCategoriesDao, CategoriesDao, PostsDao, TopicsDao}
-import com.foram.models.{Category, NewCategory}
+import com.foram.models.{Category, CategoryWithChildren}
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -15,7 +15,7 @@ object CategoryActor {
 
   case class GetCategoryByID(id: UUID)
 
-  case class CreateCategory(newCategory: NewCategory)
+  case class CreateCategory(newCategory: CategoryWithChildren)
 
   case class UpdateCategory(id: UUID, category: Category)
 
@@ -58,7 +58,7 @@ class CategoryActor(categoriesDao: AbstractCategoriesDao) extends Actor with Act
 
       // Separate category, topic and post
       val category = newCategory match {
-        case NewCategory(id, name, slug, user_id, description, created_at, updated_at, topics, posts) => Category(id, name, slug, user_id, description, created_at, updated_at)
+        case CategoryWithChildren(id, name, slug, user_id, description, created_at, updated_at, topics, posts) => Category(id, name, slug, user_id, description, created_at, updated_at)
       }
       val topic = newCategory.topics.head
       val post = newCategory.posts.head

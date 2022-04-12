@@ -7,7 +7,7 @@ import java.util.UUID
 
 case class Topic(id: UUID, title: String, slug: String, user_id: UUID, username: String, category_id: UUID, category_name: String, created_at: OffsetDateTime, updated_at: OffsetDateTime)
 
-case class NewTopic(id: UUID, title: String, slug: String, user_id: UUID, username: String, category_id: UUID, category_name: String, created_at: OffsetDateTime, updated_at: OffsetDateTime, posts: List[Post])
+case class TopicWithChildren(id: UUID, title: String, slug: String, user_id: UUID, username: String, category_id: UUID, category_name: String, created_at: OffsetDateTime, updated_at: OffsetDateTime, posts: List[Post])
 
 class TopicsTable(tag: Tag) extends Table[Topic](tag, "topics") {
   def id = column[UUID]("id", O.PrimaryKey)

@@ -10,7 +10,7 @@ import com.foram.Main.{postActor, topicActor}
 import com.foram.actors.PostActor._
 import com.foram.actors.TopicActor._
 import com.foram.auth.Auth.authenticated
-import com.foram.models.{NewTopic, Post, Topic}
+import com.foram.models.{TopicWithChildren, Post, Topic}
 import spray.json.DefaultJsonProtocol._
 
 import java.util.UUID
@@ -44,7 +44,7 @@ object TopicRoutes {
       } ~
         authenticated { claims => {
           post {
-            entity(as[NewTopic]) { newTopic =>
+            entity(as[TopicWithChildren]) { newTopic =>
               onComplete((topicActor ? CreateTopic(newTopic)).mapTo[Topic]) {
                 case Success(createdTopic) => complete(StatusCodes.Created, createdTopic)
                 case Failure(ex) => complete(StatusCodes.InternalServerError)

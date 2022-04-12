@@ -1,6 +1,6 @@
 package com.foram.dao
 
-import com.foram.models.Topic
+import com.foram.models.{Post, Topic}
 import slick.jdbc.PostgresProfile.api._
 
 import java.util.UUID

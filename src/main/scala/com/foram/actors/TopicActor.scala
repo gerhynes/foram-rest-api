@@ -2,7 +2,7 @@ package com.foram.actors
 
 import akka.actor.{Actor, ActorLogging, Props}
 import com.foram.dao.{AbstractTopicsDao, PostsDao, TopicsDao}
-import com.foram.models.{NewTopic, Topic}
+import com.foram.models.{TopicWithChildren, Topic}
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -23,7 +23,7 @@ object TopicActor {
 
   case class GetTopicsByUsername(username: String)
 
-  case class CreateTopic(newTopic: NewTopic)
+  case class CreateTopic(newTopic: TopicWithChildren)
 
   case class UpdateTopic(id: UUID, topic: Topic)
 
@@ -114,7 +114,7 @@ class TopicActor(topicsDao: AbstractTopicsDao) extends Actor with ActorLogging {
 
       // Separate topic and post
       val topic = newTopic match {
-        case NewTopic(id, title, slug, user_id, username, category_id, category_name, created_at, updated_at, posts) => Topic(id, title, slug, user_id, username, category_id, category_name, created_at, updated_at)
+        case TopicWithChildren(id, title, slug, user_id, username, category_id, category_name, created_at, updated_at, posts) => Topic(id, title, slug, user_id, username, category_id, category_name, created_at, updated_at)
       }
       val post = newTopic.posts.head
 

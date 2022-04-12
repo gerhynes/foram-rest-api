@@ -6,7 +6,7 @@ import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
 import com.foram.actors.PostActor.ActionPerformed
 import com.foram.dao.AbstractTopicsDao
-import com.foram.models.{NewTopic, Post, Topic}
+import com.foram.models.{TopicWithChildren, Post, Topic}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
@@ -30,7 +30,7 @@ class TopicActorSpec extends TestKit(ActorSystem("MySpec"))
 
   val sampleTopic: Topic = Topic(UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "I don't understand promises in JavaScript. Help!", "i-dont-understand-promises-in-javascript-help", UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "quince", UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759"), "JavaScript", OffsetDateTime.parse("2022-02-20T09:30:00.155Z"), OffsetDateTime.parse("2022-02-20T09:30:00.155Z"))
   val samplePost: Post = Post(UUID.fromString("e5760f56-4bf0-4b56-bf6e-2f8c9aee8707"), UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Quincy Lars", UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "i-dont-understand-promises-in-javascript-help", 1, "Lorem ipsum dolor sit amet, consectetur adipiscing enim", OffsetDateTime.parse("2022-02-20T09:30:00.155Z"), OffsetDateTime.parse("2022-03-15T12:41:13.539Z"))
-  val sampleNewTopic: NewTopic = NewTopic(UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "I don't understand promises in JavaScript. Help!", "i-dont-understand-promises-in-javascript-help", UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "quince", UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759"), "JavaScript", OffsetDateTime.parse("2022-02-20T09:30:00.155Z"), OffsetDateTime.parse("2022-02-20T09:30:00.155Z"), List(samplePost))
+  val sampleNewTopic: TopicWithChildren = TopicWithChildren(UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "I don't understand promises in JavaScript. Help!", "i-dont-understand-promises-in-javascript-help", UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "quince", UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759"), "JavaScript", OffsetDateTime.parse("2022-02-20T09:30:00.155Z"), OffsetDateTime.parse("2022-02-20T09:30:00.155Z"), List(samplePost))
   val mockTopicsDao: AbstractTopicsDao = stub[AbstractTopicsDao]
   val topicActor: ActorRef = system.actorOf(Props(new TopicActor(mockTopicsDao)), "topicActor")
 

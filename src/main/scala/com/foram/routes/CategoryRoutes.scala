@@ -9,7 +9,7 @@ import com.foram.Main.{categoryActor, topicActor}
 import com.foram.actors.CategoryActor._
 import com.foram.actors.TopicActor._
 import com.foram.auth.Auth.authenticated
-import com.foram.models.{Category, NewCategory, Topic}
+import com.foram.models.{Category, CategoryWithChildren, Topic}
 import spray.json.DefaultJsonProtocol._
 
 import java.util.UUID
@@ -40,7 +40,7 @@ object CategoryRoutes {
       } ~
         authenticated { claims => {
           post {
-            entity(as[NewCategory]) { newCategory =>
+            entity(as[CategoryWithChildren]) { newCategory =>
               onComplete((categoryActor ? CreateCategory(newCategory)).mapTo[Category]) {
                 case Success(createdCategory) => complete(StatusCodes.Created, createdCategory)
                 case Failure(ex) => complete(StatusCodes.InternalServerError)
