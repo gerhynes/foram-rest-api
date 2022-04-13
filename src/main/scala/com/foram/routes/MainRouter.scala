@@ -7,15 +7,17 @@ import akka.http.scaladsl.server.{Directive, ExceptionHandler, RejectionHandler,
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 
 class MainRouter(categoryActor: ActorRef, userActor: ActorRef, topicActor: ActorRef, postActor: ActorRef) {
-
+  // Instantiate routes
   val authRoutes: Route = new AuthRoutes(userActor).routes
   val categoryRoutes: Route = new CategoryRoutes(categoryActor, topicActor).routes
   val userRoutes: Route = new UserRoutes(userActor, topicActor, postActor).routes
   val topicRoutes: Route = new TopicRoutes(topicActor, postActor).routes
   val postRoutes: Route = new PostRoutes(postActor).routes
 
+  // Custom rejection handler
   val rejectionHandler: RejectionHandler = corsRejectionHandler.withFallback(RejectionHandler.default)
 
+  // Custom exception handler
   val exceptionHandler: ExceptionHandler = ExceptionHandler {
     case e: NoSuchElementException =>
       complete(StatusCodes.NotFound, "Cannot find resource")
