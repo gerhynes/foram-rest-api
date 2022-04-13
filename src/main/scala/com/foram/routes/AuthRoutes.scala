@@ -35,11 +35,10 @@ class AuthRoutes(userActor: ActorRef) {
               } else {
                 complete(HttpResponse(status = StatusCodes.Unauthorized, entity = "Incorrect username or password"))
               }
-            case Failure(failure) => complete(StatusCodes.Unauthorized)
+            case Failure(ex) => complete(StatusCodes.Unauthorized)
           }
         case _ => complete(StatusCodes.Unauthorized)
       }
     }
   }
-
 }
