@@ -114,7 +114,7 @@ class PostRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       postProbe.ref ? UpdatePost(samplePost.id, samplePost)
       postProbe.expectMsg(3000 millis, UpdatePost(samplePost.id, samplePost))
-      postProbe.reply(ActionPerformed(s"User $samplePost.id updated"))
+      postProbe.reply(ActionPerformed(s"Post $samplePost.id updated"))
 
       test ~> check {
         status should ===(StatusCodes.OK)
@@ -130,7 +130,7 @@ class PostRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       postProbe.ref ? DeletePost(samplePost.id)
       postProbe.expectMsg(3000 millis, DeletePost(samplePost.id))
-      postProbe.reply(ActionPerformed(s"User $samplePost.id deleted"))
+      postProbe.reply(ActionPerformed(s"Post $samplePost.id deleted"))
 
       test ~> check {
         status should ===(StatusCodes.OK)

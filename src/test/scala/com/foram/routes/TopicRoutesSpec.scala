@@ -169,7 +169,7 @@ class TopicRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with S
       // Mock actor behaviour
       topicProbe.ref ? UpdateTopic(sampleTopic.id, sampleTopic)
       topicProbe.expectMsg(3000 millis, UpdateTopic(sampleTopic.id, sampleTopic))
-      topicProbe.reply(ActionPerformed(s"User $sampleTopic.id updated"))
+      topicProbe.reply(ActionPerformed(s"Topic $sampleTopic.id updated"))
 
       test ~> check {
         status should ===(StatusCodes.OK)
@@ -187,7 +187,7 @@ class TopicRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with S
       // Mock actor behaviour
       topicProbe.ref ? DeleteTopic(sampleTopic.id)
       topicProbe.expectMsg(3000 millis, DeleteTopic(sampleTopic.id))
-      topicProbe.reply(ActionPerformed(s"User $sampleTopic.id deleted"))
+      topicProbe.reply(ActionPerformed(s"Topic $sampleTopic.id deleted"))
 
       test ~> check {
         status should ===(StatusCodes.OK)
