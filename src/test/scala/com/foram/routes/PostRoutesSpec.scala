@@ -31,13 +31,13 @@ class PostRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
   implicit val timeout: Timeout = Timeout(5 seconds)
 
   val samplePost: MyPost = MyPost(UUID.fromString("e5760f56-4bf0-4b56-bf6e-2f8c9aee8707"), UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Quincy Lars", UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "i-dont-understand-promises-in-javascript-help", 1, "Lorem ipsum dolor sit amet, consectetur adipiscing enim", OffsetDateTime.now(), OffsetDateTime.now())
-  val sampleToken = Auth.createToken("quincy", 7)
+  val sampleToken: String = Auth.createToken("quincy", 7)
 
   lazy val testKit: ActorTestKit = ActorTestKit()
 
   override def createActorSystem(): akka.actor.ActorSystem = testKit.system.classicSystem
 
-  implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
+  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(5.seconds)
 
   "PostRoutes" should {
     "return a list of Posts on GET requests to /api/posts" in {
@@ -86,9 +86,9 @@ class PostRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       val postRoutes: Route = new PostRoutes(postProbe.ref).routes
 
-      val userEntity = Marshal(samplePost).to[MessageEntity].futureValue
+      val postEntity = Marshal(samplePost).to[MessageEntity].futureValue
 
-      val test = Post("/api/posts").withEntity(userEntity) ~> RawHeader("Authorization", s"Bearer $sampleToken") ~> postRoutes
+      val test = Post("/api/posts").withEntity(postEntity) ~> RawHeader("Authorization", s"Bearer $sampleToken") ~> postRoutes
 
       postProbe.ref ? CreatePost(samplePost)
       postProbe.expectMsg(3000 millis, CreatePost(samplePost))
@@ -108,9 +108,9 @@ class PostRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       val postRoutes: Route = new PostRoutes(postProbe.ref).routes
 
-      val userEntity = Marshal(samplePost).to[MessageEntity].futureValue
+      val postEntity = Marshal(samplePost).to[MessageEntity].futureValue
 
-      val test = Put(s"/api/posts/${samplePost.id}").withEntity(userEntity) ~> RawHeader("Authorization", s"Bearer $sampleToken") ~> postRoutes
+      val test = Put(s"/api/posts/${samplePost.id}").withEntity(postEntity) ~> RawHeader("Authorization", s"Bearer $sampleToken") ~> postRoutes
 
       postProbe.ref ? UpdatePost(samplePost.id, samplePost)
       postProbe.expectMsg(3000 millis, UpdatePost(samplePost.id, samplePost))

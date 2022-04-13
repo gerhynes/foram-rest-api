@@ -33,19 +33,18 @@ class UserRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
   implicit val timeout: Timeout = Timeout(5 seconds)
 
   val sampleUser: User = User(UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759"), "Quincy Lars", "quincy", "qlars@example.com", Auth.hashPassword("password123"), "admin", OffsetDateTime.now(), OffsetDateTime.now())
-  val sampleToken = Auth.createToken(sampleUser.username, 7)
+  val sampleToken: String = Auth.createToken(sampleUser.username, 7)
   val sampleTopic: Topic = Topic(UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "I don't understand promises in JavaScript. Help!", "i-dont-understand-promises-in-javascript-help", UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "quince", UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759"), "JavaScript", OffsetDateTime.now(), OffsetDateTime.now())
   // Post aliased to MyPost to prevent name collision with RequestBuilder
   val samplePost: MyPost = MyPost(UUID.fromString("e5760f56-4bf0-4b56-bf6e-2f8c9aee8707"), UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Quincy Lars", UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "i-dont-understand-promises-in-javascript-help", 1, "Lorem ipsum dolor sit amet, consectetur adipiscing enim", OffsetDateTime.now(), OffsetDateTime.now())
-  val sampleRegisteredUser = RegisteredUser(UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759"), "Quincy Lars", "quincy", "qlars@example.com", "admin", OffsetDateTime.now(), OffsetDateTime.now(),
+  val sampleRegisteredUser: RegisteredUser = RegisteredUser(UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759"), "Quincy Lars", "quincy", "qlars@example.com", "admin", OffsetDateTime.now(), OffsetDateTime.now(),
     sampleToken)
-
 
   lazy val testKit: ActorTestKit = ActorTestKit()
 
   override def createActorSystem(): akka.actor.ActorSystem = testKit.system.classicSystem
 
-  implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
+  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(5.seconds)
 
   "UserRoutes" should {
     "return a list of Users for GET requests to /api/users" in {
@@ -78,10 +77,10 @@ class UserRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       val userRoutes: Route = new UserRoutes(userProbe.ref, topicProbe.ref, postProbe.ref).routes
 
-      val test = Get("/api/users/quincy") ~> userRoutes
+      val test = Get(s"/api/users/${sampleUser.username}") ~> userRoutes
 
-      userProbe.ref ? GetUserByUsername("quincy")
-      userProbe.expectMsg(3000 millis, GetUserByUsername("quincy"))
+      userProbe.ref ? GetUserByUsername(sampleUser.username)
+      userProbe.expectMsg(3000 millis, GetUserByUsername(sampleUser.username))
       userProbe.reply(sampleUser)
 
       test ~> check {
@@ -100,10 +99,10 @@ class UserRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       val userRoutes: Route = new UserRoutes(userProbe.ref, topicProbe.ref, postProbe.ref).routes
 
-      val test = Get("/api/users/quincy/topics") ~> userRoutes
+      val test = Get(s"/api/users/${sampleUser.username}/topics") ~> userRoutes
 
-      topicProbe.ref ? GetTopicsByUsername("quincy")
-      topicProbe.expectMsg(3000 millis, GetTopicsByUsername("quincy"))
+      topicProbe.ref ? GetTopicsByUsername(sampleUser.username)
+      topicProbe.expectMsg(3000 millis, GetTopicsByUsername(sampleUser.username))
       topicProbe.reply(List[Topic](sampleTopic))
 
       test ~> check {
@@ -122,10 +121,10 @@ class UserRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       val userRoutes: Route = new UserRoutes(userProbe.ref, topicProbe.ref, postProbe.ref).routes
 
-      val test = Get("/api/users/quincy/posts") ~> userRoutes
+      val test = Get(s"/api/users/${sampleUser.username}/posts") ~> userRoutes
 
-      postProbe.ref ? GetPostsByUsername("quincy")
-      postProbe.expectMsg(3000 millis, GetPostsByUsername("quincy"))
+      postProbe.ref ? GetPostsByUsername(sampleUser.username)
+      postProbe.expectMsg(3000 millis, GetPostsByUsername(sampleUser.username))
       postProbe.reply(List[MyPost](samplePost))
 
       test ~> check {
