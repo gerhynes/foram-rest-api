@@ -43,10 +43,7 @@ class UserRoutes(userActor: ActorRef, topicActor: ActorRef, postActor: ActorRef)
       } ~
         post {
           entity(as[User]) { user =>
-            val hashedUser = user match {
-              case User(id, name, username, email, password, role, created_at, updated_at) => User(id, name, username, email, Auth.hashPassword(password), role, created_at, updated_at)
-            }
-            onComplete((userActor ? CreateUser(hashedUser)).mapTo[RegisteredUser]) {
+            onComplete((userActor ? CreateUser(user)).mapTo[RegisteredUser]) {
               case Success(registeredUser) => complete(StatusCodes.Created, registeredUser)
               case Failure(ex) => complete(StatusCodes.InternalServerError, Message(ex.getMessage))
             }

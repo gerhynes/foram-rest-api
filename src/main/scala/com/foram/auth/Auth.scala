@@ -3,6 +3,7 @@ package com.foram.auth
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directive1
 import akka.http.scaladsl.server.Directives._
+import com.foram.models.User
 import com.github.t3hnar.bcrypt._
 import pdi.jwt.{Jwt, JwtAlgorithm, JwtClaim}
 
@@ -21,6 +22,12 @@ object Auth {
     value.bcryptSafeBounded match {
       case Success(result) => result
       case Failure(ex) => throw ex
+    }
+  }
+
+  def hashUserPassword(user: User): User = {
+    user match {
+      case User(id, name, username, email, password, role, created_at, updated_at) => User(id, name, username, email, hashPassword(password), role, created_at, updated_at)
     }
   }
 

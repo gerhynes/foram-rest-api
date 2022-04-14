@@ -70,12 +70,6 @@ class UserActor(usersDao: AbstractUsersDao) extends Actor with ActorLogging {
 
     case CreateUser(user) =>
       println(s"Creating user ${user.username} ${user.id}")
-
-//      // Create new user with hashed password
-//      val user = rawUser match {
-//        case User(id, name, username, email, password, role, created_at, updated_at) => User(id, name, username, email, Auth.hashPassword(rawUser.password), role, created_at, updated_at)
-//      }
-
       val userFuture = usersDao.create(user)
       val originalSender = sender
       userFuture.onComplete {
