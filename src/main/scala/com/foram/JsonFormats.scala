@@ -47,6 +47,7 @@ object JsonFormats {
   implicit val userFormat: RootJsonFormat[User] = jsonFormat8(User)
   implicit val registeredUserFormat: RootJsonFormat[RegisteredUser] = jsonFormat8(RegisteredUser)
   implicit val loginRequestFormat: RootJsonFormat[LoginRequest] = jsonFormat2(LoginRequest)
+  implicit val messageFormat: RootJsonFormat[Message] = jsonFormat1(Message)
 }
 
 

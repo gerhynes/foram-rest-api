@@ -10,7 +10,7 @@ import com.foram.actors.PostActor._
 import com.foram.actors.TopicActor._
 import com.foram.actors.UserActor._
 import com.foram.auth.Auth.authenticated
-import com.foram.models.{Post, RegisteredUser, Topic, User}
+import com.foram.models.{Message, Post, RegisteredUser, Topic, User}
 import spray.json.DefaultJsonProtocol._
 
 import java.util.UUID
@@ -44,7 +44,7 @@ class UserRoutes(userActor: ActorRef, topicActor: ActorRef, postActor: ActorRef)
           entity(as[User]) { user =>
             onComplete((userActor ? CreateUser(user)).mapTo[RegisteredUser]) {
               case Success(registeredUser) => complete(StatusCodes.Created, registeredUser)
-              case Failure(ex) => complete(StatusCodes.InternalServerError)
+              case Failure(ex) => complete(StatusCodes.InternalServerError, Message(ex.getMessage))
             }
           }
         } ~
@@ -53,13 +53,19 @@ class UserRoutes(userActor: ActorRef, topicActor: ActorRef, postActor: ActorRef)
             path(Segment) { id =>
               val uuid = UUID.fromString(id)
               entity(as[User]) { user =>
-                complete((userActor ? UpdateUser(uuid, user)).map(_ => StatusCodes.OK))
+                onComplete((userActor ? UpdateUser(uuid, user)).mapTo[Message]) {
+                  case Success(message) => complete(StatusCodes.OK, message)
+                  case Failure(ex) => complete(StatusCodes.InternalServerError, Message(ex.getMessage))
+                }
               }
             }
           } ~
             delete {
               path(Segment) { id =>
-                complete((userActor ? DeleteUser(UUID.fromString(id))).map(_ => StatusCodes.OK))
+                onComplete((userActor ? DeleteUser(UUID.fromString(id))).mapTo[Message]) {
+                  case Success(message) => complete(StatusCodes.OK, message)
+                  case Failure(ex) => complete(StatusCodes.InternalServerError, Message(ex.getMessage))
+                }
               }
             }
         }

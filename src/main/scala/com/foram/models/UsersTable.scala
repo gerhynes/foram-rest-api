@@ -7,6 +7,8 @@ import java.util.UUID
 
 case class LoginRequest(username: String, password: String)
 
+case class Message(message: String)
+
 case class User(id: UUID, name: String, username: String, email: String, password: String, role: String, created_at: OffsetDateTime, updated_at: OffsetDateTime)
 
 case class RegisteredUser(id: UUID, name: String, username: String, email: String, role: String, created_at: OffsetDateTime, updated_at: OffsetDateTime, token: String)
