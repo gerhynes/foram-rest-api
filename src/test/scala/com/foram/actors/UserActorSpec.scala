@@ -4,21 +4,21 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
-import com.foram.actors.UserActor.ActionPerformed
 import com.foram.auth.Auth
 import com.foram.dao.AbstractUsersDao
-import com.foram.models.User
+import com.foram.models.{Message, RegisteredUser, User}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterAll
+import org.scalatest.concurrent.ScalaFutures.{convertScalaFuture, whenReady}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
 import java.time.OffsetDateTime
-import java.util.UUID
 import java.util.UUID.randomUUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 
 class UserActorSpec extends TestKit(ActorSystem("MySpec"))
@@ -42,55 +42,48 @@ class UserActorSpec extends TestKit(ActorSystem("MySpec"))
       (mockUsersDao.findAll _).when().returns(Future(Seq(sampleUser)))
 
       val usersFuture = userActor ? UserActor.GetAllUsers
-      usersFuture map { users => assert(users === List[User](sampleUser)) }
+
+      usersFuture.futureValue shouldBe List(sampleUser)
     }
 
     "respond to getUserByID with a single User" in {
-      val uuid = UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672")
-      (mockUsersDao.findById _).when(uuid).returns(Future(sampleUser))
+      (mockUsersDao.findById _).when(sampleUser.id).returns(Future(sampleUser))
 
-      val userFuture = userActor ? UserActor.GetUserByID(uuid)
-      userFuture map { user => assert(user === sampleUser) }
+      val userFuture = userActor ? UserActor.GetUserByID(sampleUser.id)
+
+      userFuture.futureValue shouldBe sampleUser
     }
 
     "respond to getUserByUsername with a single User" in {
-      val username = "quince"
-      (mockUsersDao.findByUsername _).when(username).returns(Future(sampleUser))
+      (mockUsersDao.findByUsername _).when(sampleUser.username).returns(Future(sampleUser))
 
-      val userFuture = userActor ? UserActor.GetUserByUsername(username)
-      userFuture map { user => assert(user === sampleUser) }
+      val userFuture = userActor ? UserActor.GetUserByUsername(sampleUser.username)
+
+      userFuture.futureValue shouldBe sampleUser
     }
 
-    "respond to CreateUser with confirmation" in {
-      (mockUsersDao.create _).when(sampleUser).returns(Future(java.util.UUID.randomUUID))
+    "respond to CreateUser with a RegisteredUser" in {
+      (mockUsersDao.create _).when(sampleUser).returns(Future(sampleUser.id))
 
       val userFuture = userActor ? UserActor.CreateUser(sampleUser)
-      userFuture map { success =>
-        assert(success === ActionPerformed)
-        expectMsg(s"User $sampleUser created.")
-      }
+
+      userFuture.futureValue shouldBe a[RegisteredUser]
     }
 
-    "respond to UpdateUser with confirmation" in {
-      val uuid = UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672")
-      (mockUsersDao.update _).when(uuid, sampleUser).returns(Future(1))
+    "respond to UpdateUser with confirmation Message" in {
+      (mockUsersDao.update _).when(sampleUser.id, sampleUser).returns(Future(1))
 
-      val userFuture = userActor ? UserActor.UpdateUser(uuid, sampleUser)
-      userFuture map { success =>
-        assert(success === ActionPerformed)
-        expectMsg(s"User $uuid updated")
-      }
+      val userFuture = userActor ? UserActor.UpdateUser(sampleUser.id, sampleUser)
+
+      userFuture.futureValue shouldBe Message(s"User ${sampleUser.id.toString} updated")
     }
 
-    "respond to DeleteUser with confirmation" in {
-      val uuid = UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672")
-      (mockUsersDao.delete _).when(uuid).returns(Future(1))
+    "respond to DeleteUser with confirmation Message" in {
+      (mockUsersDao.delete _).when(sampleUser.id).returns(Future(1))
 
-      val userFuture = userActor ? UserActor.DeleteUser(uuid)
-      userFuture map { success =>
-        assert(success === ActionPerformed)
-        expectMsg(s"User $uuid deleted")
-      }
+      val userFuture = userActor ? UserActor.DeleteUser(sampleUser.id)
+
+      userFuture.futureValue shouldBe Message(s"User ${sampleUser.id.toString} deleted")
     }
   }
 }
