@@ -9,6 +9,7 @@ import akka.util.Timeout
 import com.foram.actors.PostActor._
 import com.foram.actors.TopicActor._
 import com.foram.actors.UserActor._
+import com.foram.auth.Auth
 import com.foram.auth.Auth.authenticated
 import com.foram.models.{Message, Post, RegisteredUser, Topic, User}
 import spray.json.DefaultJsonProtocol._
@@ -42,7 +43,10 @@ class UserRoutes(userActor: ActorRef, topicActor: ActorRef, postActor: ActorRef)
       } ~
         post {
           entity(as[User]) { user =>
-            onComplete((userActor ? CreateUser(user)).mapTo[RegisteredUser]) {
+            val hashedUser = user match {
+              case User(id, name, username, email, password, role, created_at, updated_at) => User(id, name, username, email, Auth.hashPassword(password), role, created_at, updated_at)
+            }
+            onComplete((userActor ? CreateUser(hashedUser)).mapTo[RegisteredUser]) {
               case Success(registeredUser) => complete(StatusCodes.Created, registeredUser)
               case Failure(ex) => complete(StatusCodes.InternalServerError, Message(ex.getMessage))
             }

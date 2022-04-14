@@ -68,13 +68,13 @@ class UserActor(usersDao: AbstractUsersDao) extends Actor with ActorLogging {
           originalSender ! e
       }
 
-    case CreateUser(rawUser) =>
-      println(s"Creating user ${rawUser.username} ${rawUser.id}")
+    case CreateUser(user) =>
+      println(s"Creating user ${user.username} ${user.id}")
 
-      // Create new user with hashed password
-      val user = rawUser match {
-        case User(id, name, username, email, password, role, created_at, updated_at) => User(id, name, username, email, Auth.hashPassword(rawUser.password), role, created_at, updated_at)
-      }
+//      // Create new user with hashed password
+//      val user = rawUser match {
+//        case User(id, name, username, email, password, role, created_at, updated_at) => User(id, name, username, email, Auth.hashPassword(rawUser.password), role, created_at, updated_at)
+//      }
 
       val userFuture = usersDao.create(user)
       val originalSender = sender
@@ -96,7 +96,7 @@ class UserActor(usersDao: AbstractUsersDao) extends Actor with ActorLogging {
       val userFuture = usersDao.update(id, user)
       val originalSender = sender
       userFuture.onComplete {
-        case Success(success) => originalSender ! Message(s"User $id updated: Success $success")
+        case Success(success) => originalSender ! Message(s"User $id updated")
         case Failure(e) =>
           println(s"Unable to update user $id")
           e.printStackTrace()
@@ -108,7 +108,7 @@ class UserActor(usersDao: AbstractUsersDao) extends Actor with ActorLogging {
       val userFuture = usersDao.delete(id)
       val originalSender = sender
       userFuture.onComplete {
-        case Success(success) => originalSender ! Message(s"User $id deleted: Success $success")
+        case Success(success) => originalSender ! Message(s"User $id deleted")
         case Failure(e) =>
           println(s"Unable to delete user $id")
           e.printStackTrace()

@@ -2,16 +2,16 @@ package com.foram.auth
 
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directive1
-import akka.http.scaladsl.server.Directives.{complete, optionalHeaderValueByName, provide}
+import akka.http.scaladsl.server.Directives._
 import com.github.t3hnar.bcrypt._
 import pdi.jwt.{Jwt, JwtAlgorithm, JwtClaim}
-import scala.util.matching.Regex
 
 import java.time.Clock
 import java.util.concurrent.TimeUnit
 import scala.util.{Failure, Success}
 
 object Auth {
+
   val algorithm = JwtAlgorithm.HS256
   val secretKey = "thisshouldbeabettersecret"
 
@@ -43,12 +43,6 @@ object Auth {
 
   def isTokenValid(token: String): Boolean = Jwt.isValid(token, secretKey, Seq(algorithm))
 
-  def getUserDataFromClaims(claims: String): String = {
-    val pattern = "\"username\"[:]\"[A-Za-z0-9_-]+\"".r
-    val pattern(username) = claims
-    username.substring(11, -1)
-  }
-
   def authenticated: Directive1[String] = {
     optionalHeaderValueByName("Authorization").flatMap {
       case Some(bearerToken) =>
@@ -70,5 +64,4 @@ object Auth {
       case _ => complete(HttpResponse(status = StatusCodes.Unauthorized, entity = "No token was provided"))
     }
   }
-
 }
