@@ -14,7 +14,7 @@ import com.foram.actors.PostActor.GetPostsByUsername
 import com.foram.actors.TopicActor.GetTopicsByUsername
 import com.foram.actors.UserActor._
 import com.foram.auth.Auth
-import com.foram.models.{RegisteredUser, Topic, User, Post => MyPost}
+import com.foram.models.{Message, RegisteredUser, Topic, User, Post => MyPost}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -63,9 +63,7 @@ class UserRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       test ~> check {
         status should ===(StatusCodes.OK)
-
         contentType should ===(ContentTypes.`application/json`)
-
         entityAs[String] should ===(List[User](sampleUser).toJson.toString())
       }
     }
@@ -85,9 +83,7 @@ class UserRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       test ~> check {
         status should ===(StatusCodes.OK)
-
         contentType should ===(ContentTypes.`application/json`)
-
         entityAs[String] should ===(sampleUser.toJson.toString())
       }
     }
@@ -107,9 +103,7 @@ class UserRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       test ~> check {
         status should ===(StatusCodes.OK)
-
         contentType should ===(ContentTypes.`application/json`)
-
         entityAs[String] should ===(List(sampleTopic).toJson.toString())
       }
     }
@@ -129,9 +123,7 @@ class UserRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       test ~> check {
         status should ===(StatusCodes.OK)
-
         contentType should ===(ContentTypes.`application/json`)
-
         entityAs[String] should ===(List(samplePost).toJson.toString())
       }
     }
@@ -153,9 +145,7 @@ class UserRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       test ~> check {
         status should ===(StatusCodes.Created)
-
         contentType should ===(ContentTypes.`application/json`)
-
         entityAs[String] should ===(sampleRegisteredUser.toJson.toString())
       }
     }
@@ -173,10 +163,12 @@ class UserRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       userProbe.ref ? UpdateUser(sampleUser.id, sampleUser)
       userProbe.expectMsg(3000 millis, UpdateUser(sampleUser.id, sampleUser))
-      userProbe.reply(ActionPerformed(s"User $sampleUser.id updated"))
+      userProbe.reply(Message(s"User ${sampleUser.id} updated"))
 
       test ~> check {
         status should ===(StatusCodes.OK)
+        contentType should ===(ContentTypes.`application/json`)
+        entityAs[String] should ===(Message(s"User ${sampleUser.id} updated").toJson.toString())
       }
     }
     "delete a User on DELETE requests to /api/users/:userId" in {
@@ -191,10 +183,12 @@ class UserRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       userProbe.ref ? DeleteUser(sampleUser.id)
       userProbe.expectMsg(3000 millis, DeleteUser(sampleUser.id))
-      userProbe.reply(ActionPerformed(s"User $sampleUser.id deleted"))
+      userProbe.reply(Message(s"User ${sampleUser.id} deleted"))
 
       test ~> check {
         status should ===(StatusCodes.OK)
+        contentType should ===(ContentTypes.`application/json`)
+        entityAs[String] should ===(Message(s"User ${sampleUser.id} deleted").toJson.toString())
       }
     }
   }
