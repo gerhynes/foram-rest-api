@@ -12,7 +12,7 @@ import akka.testkit.TestProbe
 import akka.util.Timeout
 import com.foram.actors.PostActor._
 import com.foram.auth.Auth
-import com.foram.models.{Post => MyPost}
+import com.foram.models.{Message, Post => MyPost}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -48,15 +48,14 @@ class PostRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       val test = Get("/api/posts/") ~> postRoutes
 
+      // Mock actor behaviour
       postProbe.ref ? GetAllPosts
       postProbe.expectMsg(3000 millis, GetAllPosts)
       postProbe.reply(List[MyPost](samplePost))
 
       test ~> check {
         status should ===(StatusCodes.OK)
-
         contentType should ===(ContentTypes.`application/json`)
-
         entityAs[String] should ===(List[MyPost](samplePost).toJson.toString())
       }
     }
@@ -68,15 +67,14 @@ class PostRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       val test = Get(s"/api/posts/${samplePost.id}") ~> postRoutes
 
+      // Mock actor behaviour
       postProbe.ref ? GetPostByID(samplePost.id)
       postProbe.expectMsg(3000 millis, GetPostByID(samplePost.id))
       postProbe.reply(samplePost)
 
       test ~> check {
         status should ===(StatusCodes.OK)
-
         contentType should ===(ContentTypes.`application/json`)
-
         entityAs[String] should ===(samplePost.toJson.toString())
       }
     }
@@ -90,15 +88,14 @@ class PostRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       val test = Post("/api/posts").withEntity(postEntity) ~> RawHeader("Authorization", s"Bearer $sampleToken") ~> postRoutes
 
+      // Mock actor behaviour
       postProbe.ref ? CreatePost(samplePost)
       postProbe.expectMsg(3000 millis, CreatePost(samplePost))
       postProbe.reply(samplePost)
 
       test ~> check {
         status should ===(StatusCodes.Created)
-
         contentType should ===(ContentTypes.`application/json`)
-
         entityAs[String] should ===(samplePost.toJson.toString())
       }
     }
@@ -112,12 +109,15 @@ class PostRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       val test = Put(s"/api/posts/${samplePost.id}").withEntity(postEntity) ~> RawHeader("Authorization", s"Bearer $sampleToken") ~> postRoutes
 
+      // Mock actor behaviour
       postProbe.ref ? UpdatePost(samplePost.id, samplePost)
       postProbe.expectMsg(3000 millis, UpdatePost(samplePost.id, samplePost))
-      postProbe.reply(ActionPerformed(s"Post $samplePost.id updated"))
+      postProbe.reply(Message(s"Post ${samplePost.id} updated"))
 
       test ~> check {
         status should ===(StatusCodes.OK)
+        contentType should ===(ContentTypes.`application/json`)
+        entityAs[String] should ===(Message(s"Post ${samplePost.id} updated").toJson.toString())
       }
     }
     "delete a Post on DELETE requests to /api/posts/:postId" in {
@@ -128,12 +128,15 @@ class PostRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       val test = Delete(s"/api/posts/${samplePost.id}") ~> RawHeader("Authorization", s"Bearer $sampleToken") ~> postRoutes
 
+      // Mock actor behaviour
       postProbe.ref ? DeletePost(samplePost.id)
       postProbe.expectMsg(3000 millis, DeletePost(samplePost.id))
-      postProbe.reply(ActionPerformed(s"Post $samplePost.id deleted"))
+      postProbe.reply(Message(s"Post ${samplePost.id} deleted"))
 
       test ~> check {
         status should ===(StatusCodes.OK)
+        contentType should ===(ContentTypes.`application/json`)
+        entityAs[String] should ===(Message(s"Post ${samplePost.id} deleted").toJson.toString())
       }
     }
   }

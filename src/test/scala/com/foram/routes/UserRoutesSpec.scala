@@ -57,6 +57,7 @@ class UserRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       val test = Get("/api/users/") ~> userRoutes
 
+      // Mock actor behaviour
       userProbe.ref ? GetAllUsers
       userProbe.expectMsg(3000 millis, GetAllUsers)
       userProbe.reply(List[User](sampleUser))
@@ -77,6 +78,7 @@ class UserRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       val test = Get(s"/api/users/${sampleUser.username}") ~> userRoutes
 
+      // Mock actor behaviour
       userProbe.ref ? GetUserByUsername(sampleUser.username)
       userProbe.expectMsg(3000 millis, GetUserByUsername(sampleUser.username))
       userProbe.reply(sampleUser)
@@ -97,6 +99,7 @@ class UserRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       val test = Get(s"/api/users/${sampleUser.username}/topics") ~> userRoutes
 
+      // Mock actor behaviour
       topicProbe.ref ? GetTopicsByUsername(sampleUser.username)
       topicProbe.expectMsg(3000 millis, GetTopicsByUsername(sampleUser.username))
       topicProbe.reply(List[Topic](sampleTopic))
@@ -117,6 +120,7 @@ class UserRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       val test = Get(s"/api/users/${sampleUser.username}/posts") ~> userRoutes
 
+      // Mock actor behaviour
       postProbe.ref ? GetPostsByUsername(sampleUser.username)
       postProbe.expectMsg(3000 millis, GetPostsByUsername(sampleUser.username))
       postProbe.reply(List[MyPost](samplePost))
@@ -139,6 +143,7 @@ class UserRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       val test = Post("/api/users").withEntity(userEntity) ~> userRoutes
 
+      // Mock actor behaviour
       userProbe.ref ? CreateUser(sampleUser)
       userProbe.expectMsg(3000 millis, CreateUser(sampleUser))
       userProbe.reply(sampleRegisteredUser)
@@ -161,6 +166,7 @@ class UserRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       val test = Put(s"/api/users/${sampleUser.id}").withEntity(userEntity) ~> RawHeader("Authorization", s"Bearer $sampleToken") ~> userRoutes
 
+      // Mock actor behaviour
       userProbe.ref ? UpdateUser(sampleUser.id, sampleUser)
       userProbe.expectMsg(3000 millis, UpdateUser(sampleUser.id, sampleUser))
       userProbe.reply(Message(s"User ${sampleUser.id} updated"))
@@ -181,6 +187,7 @@ class UserRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sc
 
       val test = Delete(s"/api/users/${sampleUser.id}") ~> RawHeader("Authorization", s"Bearer $sampleToken") ~> userRoutes
 
+      // Mock actor behaviour
       userProbe.ref ? DeleteUser(sampleUser.id)
       userProbe.expectMsg(3000 millis, DeleteUser(sampleUser.id))
       userProbe.reply(Message(s"User ${sampleUser.id} deleted"))
