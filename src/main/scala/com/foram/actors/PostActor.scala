@@ -2,7 +2,7 @@ package com.foram.actors
 
 import akka.actor.{Actor, ActorLogging, Props}
 import com.foram.dao.{AbstractPostsDao, PostsDao}
-import com.foram.models.Post
+import com.foram.models.{Message, Post}
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -112,7 +112,7 @@ class PostActor(postsDao: AbstractPostsDao) extends Actor with ActorLogging {
       val postFuture = PostsDao.update(id, post)
       val originalSender = sender
       postFuture.onComplete {
-        case Success(success) => originalSender ! ActionPerformed(s"Post $id updated")
+        case Success(success) => originalSender ! Message(s"Post $id updated")
         case Failure(e) =>
           println(s"Unable to update post $id")
           e.printStackTrace()
@@ -124,7 +124,7 @@ class PostActor(postsDao: AbstractPostsDao) extends Actor with ActorLogging {
       val postFuture = PostsDao.delete(id)
       val originalSender = sender
       postFuture.onComplete {
-        case Success(success) => originalSender ! ActionPerformed(s"Post $id deleted")
+        case Success(success) => originalSender ! Message(s"Post $id deleted")
         case Failure(e) =>
           println(s"Unable to delete post $id")
           e.printStackTrace()

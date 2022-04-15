@@ -8,7 +8,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.foram.actors.PostActor._
 import com.foram.auth.Auth.authenticated
-import com.foram.models.Post
+import com.foram.models.{Message, Post}
 import spray.json.DefaultJsonProtocol._
 
 import java.util.UUID
@@ -46,14 +46,20 @@ class PostRoutes(postActor: ActorRef) {
               path(Segment) { id =>
                 val uuid = UUID.fromString(id)
                 entity(as[Post]) { post =>
-                  complete((postActor ? UpdatePost(uuid, post)).map(_ => StatusCodes.OK))
+                  onComplete((postActor ? UpdatePost(uuid, post)).mapTo[Message])  {
+                    case Success(message) => complete(StatusCodes.OK, message)
+                    case Failure(ex) => complete(StatusCodes.InternalServerError)
+                  }
                 }
               }
             } ~
             delete {
               path(Segment) { id =>
                 val uuid = UUID.fromString(id)
-                complete((postActor ? DeletePost(uuid)).map(_ => StatusCodes.OK))
+                onComplete((postActor ? DeletePost(uuid)).mapTo[Message]) {
+                  case Success(message) => complete(StatusCodes.OK, message)
+                  case Failure(ex) => complete(StatusCodes.InternalServerError)
+                }
               }
             }
         }
