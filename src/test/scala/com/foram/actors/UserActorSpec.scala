@@ -9,7 +9,7 @@ import com.foram.dao.AbstractUsersDao
 import com.foram.models.{Message, RegisteredUser, User}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterAll
-import org.scalatest.concurrent.ScalaFutures.{convertScalaFuture, whenReady}
+import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
@@ -18,7 +18,6 @@ import java.util.UUID.randomUUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
 
 
 class UserActorSpec extends TestKit(ActorSystem("MySpec"))
