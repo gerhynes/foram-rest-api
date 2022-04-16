@@ -18,7 +18,7 @@ object Main extends App {
   // Set up actors
   val categoryActor = system.actorOf(Props (new CategoryActor(CategoriesDao)), "categoryActor")
   val userActor = system.actorOf(Props (new UserActor(UsersDao)), "userActor")
-  val topicActor = system.actorOf(Props (new TopicActor(TopicsDao)), "topicActor")
+  val topicActor = system.actorOf(Props (new TopicActor(TopicsDao, PostsDao)), "topicActor")
   val postActor = system.actorOf(Props (new PostActor(PostsDao)), "postActor")
 
   // Get all routes
