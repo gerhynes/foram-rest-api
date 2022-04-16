@@ -13,7 +13,7 @@ import akka.util.Timeout
 import com.foram.actors.PostActor
 import com.foram.actors.TopicActor._
 import com.foram.auth.Auth
-import com.foram.models.{Topic, TopicWithChildren, Post => MyPost}
+import com.foram.models.{Message, Topic, TopicWithChildren, Post => MyPost}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -59,9 +59,7 @@ class TopicRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with S
 
       test ~> check {
         status should ===(StatusCodes.OK)
-
         contentType should ===(ContentTypes.`application/json`)
-
         entityAs[String] should ===(List[Topic](sampleTopic).toJson.toString())
       }
     }
@@ -81,9 +79,7 @@ class TopicRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with S
 
       test ~> check {
         status should ===(StatusCodes.OK)
-
         contentType should ===(ContentTypes.`application/json`)
-
         entityAs[String] should ===(sampleTopic.toJson.toString())
       }
     }
@@ -103,9 +99,7 @@ class TopicRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with S
 
       test ~> check {
         status should ===(StatusCodes.OK)
-
         contentType should ===(ContentTypes.`application/json`)
-
         entityAs[String] should ===(List(samplePost).toJson.toString())
       }
     }
@@ -125,9 +119,7 @@ class TopicRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with S
 
       test ~> check {
         status should ===(StatusCodes.OK)
-
         contentType should ===(ContentTypes.`application/json`)
-
         entityAs[String] should ===(List(sampleTopic).toJson.toString())
       }
     }
@@ -149,9 +141,7 @@ class TopicRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with S
 
       test ~> check {
         status should ===(StatusCodes.Created)
-
         contentType should ===(ContentTypes.`application/json`)
-
         entityAs[String] should ===(sampleTopic.toJson.toString())
       }
     }
@@ -169,10 +159,12 @@ class TopicRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with S
       // Mock actor behaviour
       topicProbe.ref ? UpdateTopic(sampleTopic.id, sampleTopic)
       topicProbe.expectMsg(3000 millis, UpdateTopic(sampleTopic.id, sampleTopic))
-      topicProbe.reply(ActionPerformed(s"Topic $sampleTopic.id updated"))
+      topicProbe.reply(Message(s"Topic ${sampleTopic.id} updated"))
 
       test ~> check {
         status should ===(StatusCodes.OK)
+        contentType should ===(ContentTypes.`application/json`)
+        entityAs[String] should ===(Message(s"Topic ${sampleTopic.id} updated").toJson.toString())
       }
     }
     "delete a Topic on DELETE requests to /api/topics/:topicId" in {
@@ -187,10 +179,12 @@ class TopicRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with S
       // Mock actor behaviour
       topicProbe.ref ? DeleteTopic(sampleTopic.id)
       topicProbe.expectMsg(3000 millis, DeleteTopic(sampleTopic.id))
-      topicProbe.reply(ActionPerformed(s"Topic $sampleTopic.id deleted"))
+      topicProbe.reply(Message(s"Topic ${sampleTopic.id} deleted"))
 
       test ~> check {
         status should ===(StatusCodes.OK)
+        contentType should ===(ContentTypes.`application/json`)
+        entityAs[String] should ===(Message(s"Topic ${sampleTopic.id} deleted").toJson.toString())
       }
     }
   }
