@@ -5,10 +5,11 @@ import akka.pattern.ask
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
 import com.foram.actors.PostActor.ActionPerformed
-import com.foram.dao.AbstractCategoriesDao
+import com.foram.dao.{AbstractCategoriesDao, AbstractPostsDao, AbstractTopicsDao}
 import com.foram.models._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterAll
+import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
@@ -32,19 +33,23 @@ class CategoryActorSpec extends TestKit(ActorSystem("MySpec"))
   val sampleTopic: Topic = Topic(UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "I don't understand promises in JavaScript. Help!", "i-dont-understand-promises-in-javascript-help", UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "quince", UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759"), "JavaScript", OffsetDateTime.now(), OffsetDateTime.now())
   val samplePost: Post = Post(UUID.fromString("e5760f56-4bf0-4b56-bf6e-2f8c9aee8707"), UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Quincy Lars", UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "i-dont-understand-promises-in-javascript-help", 1, "Lorem ipsum dolor sit amet, consectetur adipiscing enim", OffsetDateTime.now(), OffsetDateTime.now())
   val sampleNewTopic: TopicWithChildren = TopicWithChildren(UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "I don't understand promises in JavaScript. Help!", "i-dont-understand-promises-in-javascript-help", UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "quince", UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759"), "JavaScript", OffsetDateTime.now(), OffsetDateTime.now(), List(samplePost))
-  val sampleNewCategory: CategoryWithChildren = CategoryWithChildren(UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759"), "JavaScript", "javascript", UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Ask questions and share tips for JavaScript, React, Node - anything to do with the JavaScript ecosystem.", OffsetDateTime.now(), OffsetDateTime.now(), List(sampleTopic), List(samplePost))
+  val sampleNewCategory: CategoryWithChildren = CategoryWithChildren(sampleCategory.id, sampleCategory.name, sampleCategory.slug, sampleCategory.user_id, sampleCategory.description, sampleCategory.created_at, sampleCategory.updated_at, List(sampleTopic), List(samplePost))
 
   val mockCategoriesDao: AbstractCategoriesDao = stub[AbstractCategoriesDao]
-  val categoryActor: ActorRef = system.actorOf(Props(new CategoryActor(mockCategoriesDao)), "categoryActor")
+  val mockTopicsDao = stub[AbstractTopicsDao]
+  val mockPostsDao = stub[AbstractPostsDao]
+
+  val categoryActor: ActorRef = system.actorOf(Props(new CategoryActor(mockCategoriesDao, mockTopicsDao, mockPostsDao)), "categoryActor")
 
   implicit val timeout: Timeout = Timeout(5 seconds)
 
-  "A CategoryActor" must {
+  "A CategoryActor" should {
     "respond to getAllCategories with a list of Categories" in {
       (mockCategoriesDao.findAll _).when().returns(Future(Seq(sampleCategory)))
 
       val categoriesFuture = categoryActor ? CategoryActor.GetAllCategories
-      categoriesFuture map { categories => assert(categories === List[Category](sampleCategory)) }
+
+      categoriesFuture.futureValue shouldBe List(sampleCategory)
     }
 
     "respond to getCategoryByID with a single Category" in {
