@@ -9,11 +9,10 @@ import akka.util.Timeout
 import com.foram.actors.PostActor._
 import com.foram.actors.TopicActor._
 import com.foram.auth.Auth.authenticated
-import com.foram.models.{Post, Topic, TopicWithChildren}
+import com.foram.models.{Message, Post, Topic, TopicWithChildren}
 import spray.json.DefaultJsonProtocol._
 
 import java.util.UUID
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
@@ -54,14 +53,20 @@ class TopicRoutes(topicActor: ActorRef, postActor: ActorRef) {
               path(Segment) { id =>
                 val uuid = UUID.fromString(id)
                 entity(as[Topic]) { topic =>
-                  complete((topicActor ? UpdateTopic(uuid, topic)).map(_ => StatusCodes.OK))
+                  onComplete((topicActor ? UpdateTopic(uuid, topic)).mapTo[Message]) {
+                    case Success(message) => complete(StatusCodes.OK, message)
+                    case Failure(ex) => complete(StatusCodes.InternalServerError)
+                  }
                 }
               }
             } ~
             delete {
               path(Segment) { id =>
                 val uuid = UUID.fromString(id)
-                complete((topicActor ? DeleteTopic(uuid)).map(_ => StatusCodes.OK))
+                onComplete((topicActor ? DeleteTopic(uuid)).mapTo[Message]) {
+                  case Success(message) => complete(StatusCodes.OK, message)
+                  case Failure(ex) => complete(StatusCodes.InternalServerError)
+                }
               }
             }
         }
