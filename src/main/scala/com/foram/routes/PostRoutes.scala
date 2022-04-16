@@ -1,15 +1,14 @@
 package com.foram.routes
 
+import akka.actor.ActorRef
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.ExceptionHandler
 import akka.pattern.ask
 import akka.util.Timeout
-import com.foram.Main.postActor
 import com.foram.actors.PostActor._
-import com.foram.auth.Auth.{authenticated, getUserDataFromClaims}
-import com.foram.models.Post
+import com.foram.auth.Auth.authenticated
+import com.foram.models.{Message, Post}
 import spray.json.DefaultJsonProtocol._
 
 import java.util.UUID
@@ -17,7 +16,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
-object PostRoutes {
+class PostRoutes(postActor: ActorRef) {
 
   import com.foram.JsonFormats._
 
@@ -47,14 +46,20 @@ object PostRoutes {
               path(Segment) { id =>
                 val uuid = UUID.fromString(id)
                 entity(as[Post]) { post =>
-                  complete((postActor ? UpdatePost(uuid, post)).map(_ => StatusCodes.OK))
+                  onComplete((postActor ? UpdatePost(uuid, post)).mapTo[Message])  {
+                    case Success(message) => complete(StatusCodes.OK, message)
+                    case Failure(ex) => complete(StatusCodes.InternalServerError)
+                  }
                 }
               }
             } ~
             delete {
               path(Segment) { id =>
                 val uuid = UUID.fromString(id)
-                complete((postActor ? DeletePost(uuid)).map(_ => StatusCodes.OK))
+                onComplete((postActor ? DeletePost(uuid)).mapTo[Message]) {
+                  case Success(message) => complete(StatusCodes.OK, message)
+                  case Failure(ex) => complete(StatusCodes.InternalServerError)
+                }
               }
             }
         }

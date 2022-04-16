@@ -4,12 +4,12 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
-import com.foram.actors.PostActor.ActionPerformed
 import com.foram.auth.Auth
 import com.foram.dao.AbstractPostsDao
-import com.foram.models.{Post, User}
+import com.foram.models.{Message, Post, User}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterAll
+import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
@@ -29,83 +29,76 @@ class PostActorSpec extends TestKit(ActorSystem("MySpec"))
     TestKit.shutdownActorSystem(system)
   }
 
-  val samplePost: Post = Post(UUID.fromString("e5760f56-4bf0-4b56-bf6e-2f8c9aee8707"), UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Quincy Lars", UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "i-dont-understand-promises-in-javascript-help", 1, "Lorem ipsum dolor sit amet, consectetur adipiscing enim", OffsetDateTime.parse("2022-02-20T09:30:00.155Z"), OffsetDateTime.parse("2022-03-15T12:41:13.539Z"))
-  val sampleUser: User = User(UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Quincy Lars", "quince", "qlars@example.com", Auth.hashPassword("password123"), "admin", OffsetDateTime.parse("2022-02-20T06:30:00.166Z"), OffsetDateTime.parse("2022-02-20T06:30:00.166Z"))
+  val samplePost: Post = Post(UUID.fromString("e5760f56-4bf0-4b56-bf6e-2f8c9aee8707"), UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Quincy Lars", UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "i-dont-understand-promises-in-javascript-help", 1, "Lorem ipsum dolor sit amet, consectetur adipiscing enim", OffsetDateTime.now(), OffsetDateTime.now())
+  val sampleUser: User = User(UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Quincy Lars", "quincy", "qlars@example.com", Auth.hashPassword("password123"), "admin", OffsetDateTime.now(), OffsetDateTime.now())
   val mockPostsDao: AbstractPostsDao = stub[AbstractPostsDao]
   val postActor: ActorRef = system.actorOf(Props(new PostActor(mockPostsDao)), "postActor")
 
   implicit val timeout: Timeout = Timeout(5 seconds)
 
-  "A PostActor" must {
+  "A PostActor" should {
     "respond to getAllPosts with a list of Posts" in {
       (mockPostsDao.findAll _).when().returns(Future(Seq(samplePost)))
 
       val postsFuture = postActor ? PostActor.GetAllPosts
-      postsFuture map { posts => assert(posts === List[Post](samplePost)) }
+
+      postsFuture.futureValue shouldBe List(samplePost)
     }
 
     "respond to getPostByID with a single Post" in {
-      val uuid = UUID.fromString("e5760f56-4bf0-4b56-bf6e-2f8c9aee8707")
-      (mockPostsDao.findById _).when(uuid).returns(Future(samplePost))
+      (mockPostsDao.findById _).when(samplePost.id).returns(Future(samplePost))
 
-      val postFuture = postActor ? PostActor.GetPostByID(uuid)
-      postFuture map { post => assert(post === samplePost) }
+      val postFuture = postActor ? PostActor.GetPostByID(samplePost.id)
+
+      postFuture.futureValue shouldBe samplePost
     }
 
     "respond to getPostsByTopicID with a list of Posts" in {
-      val uuid = UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946")
-      (mockPostsDao.findByTopicID _).when(uuid).returns(Future(Seq(samplePost)))
+      (mockPostsDao.findByTopicID _).when(samplePost.topic_id).returns(Future(Seq(samplePost)))
 
-      val postsFuture = postActor ? PostActor.GetPostsByTopicID(uuid)
-      postsFuture map { posts => assert(posts === List[Post](samplePost)) }
+      val postsFuture = postActor ? PostActor.GetPostsByTopicID(samplePost.topic_id)
+
+      postsFuture.futureValue shouldBe List(samplePost)
     }
 
     "respond to getPostsByUserID with a list of Posts" in {
-      val uuid = UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672")
-      (mockPostsDao.findByUserID _).when(uuid).returns(Future(Seq(samplePost)))
+      (mockPostsDao.findByUserID _).when(sampleUser.id).returns(Future(Seq(samplePost)))
 
-      val postsFuture = postActor ? PostActor.GetPostsByUserID(uuid)
-      postsFuture map { posts => assert(posts === List[Post](samplePost)) }
+      val postsFuture = postActor ? PostActor.GetPostsByUserID(sampleUser.id)
+
+      postsFuture.futureValue shouldBe List(samplePost)
     }
 
     "respond to getPostsByUsername with a list of Posts" in {
-      val username = "quince"
-      (mockPostsDao.findByUsername _).when(username).returns(Future(Seq(samplePost)))
+      (mockPostsDao.findByUsername _).when(sampleUser.username).returns(Future(Seq(samplePost)))
 
-      val postsFuture = postActor ? PostActor.GetPostsByUsername(username)
-      postsFuture map { posts => assert(posts === List[Post](samplePost)) }
+      val postsFuture = postActor ? PostActor.GetPostsByUsername(sampleUser.username)
+
+      postsFuture.futureValue shouldBe List(samplePost)
     }
 
-    "respond to CreatePost with confirmation" in {
+    "respond to CreatePost with Post created" in {
       (mockPostsDao.create _).when(samplePost).returns(Future(samplePost.id))
 
       val postFuture = postActor ? PostActor.CreatePost(samplePost)
-      postFuture map { success =>
-        assert(success === ActionPerformed)
-        expectMsg(s"Post $samplePost created.")
-      }
+
+      postFuture.futureValue shouldBe samplePost
     }
 
-    "respond to UpdatePost with confirmation" in {
-      val uuid = UUID.fromString("e5760f56-4bf0-4b56-bf6e-2f8c9aee8707")
-      (mockPostsDao.update _).when(uuid, samplePost).returns(Future(1))
+    "respond to UpdatePost with confirmation Message" in {
+      (mockPostsDao.update _).when(samplePost.id, samplePost).returns(Future(1))
 
-      val postFuture = postActor ? PostActor.UpdatePost(uuid, samplePost)
-      postFuture map { success =>
-        assert(success === ActionPerformed)
-        expectMsg(s"Post $uuid updated")
-      }
+      val postFuture = postActor ? PostActor.UpdatePost(samplePost.id, samplePost)
+
+      postFuture.futureValue shouldBe Message(s"Post ${samplePost.id} updated")
     }
 
-    "respond to DeletePost with confirmation" in {
-      val uuid = UUID.fromString("e5760f56-4bf0-4b56-bf6e-2f8c9aee8707")
-      (mockPostsDao.delete _).when(uuid).returns(Future(1))
+    "respond to DeletePost with confirmation Message" in {
+      (mockPostsDao.delete _).when(samplePost.id).returns(Future(1))
 
-      val postFuture = postActor ? PostActor.DeletePost(uuid)
-      postFuture map { success =>
-        assert(success === ActionPerformed)
-        expectMsg(s"Post $uuid deleted")
-      }
+      val postFuture = postActor ? PostActor.DeletePost(samplePost.id)
+
+      postFuture.futureValue shouldBe Message(s"Post ${samplePost.id} deleted")
     }
   }
 }

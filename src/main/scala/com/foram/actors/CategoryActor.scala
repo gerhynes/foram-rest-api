@@ -1,16 +1,14 @@
 package com.foram.actors
 
 import akka.actor.{Actor, ActorLogging, Props}
-import com.foram.dao.{AbstractCategoriesDao, CategoriesDao, PostsDao, TopicsDao}
-import com.foram.models.{Category, CategoryWithChildren}
+import com.foram.dao.{AbstractCategoriesDao, AbstractPostsDao, AbstractTopicsDao}
+import com.foram.models.{Category, CategoryWithChildren, Message}
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
 
 object CategoryActor {
-  case class ActionPerformed(action: String)
-
   case object GetAllCategories
 
   case class GetCategoryByID(id: UUID)
@@ -24,14 +22,14 @@ object CategoryActor {
   def props = Props[CategoryActor]
 }
 
-class CategoryActor(categoriesDao: AbstractCategoriesDao) extends Actor with ActorLogging {
+class CategoryActor(categoriesDao: AbstractCategoriesDao, topicsDao: AbstractTopicsDao, postsDao: AbstractPostsDao) extends Actor with ActorLogging {
 
   import CategoryActor._
 
   override def receive: Receive = {
     case GetAllCategories =>
       println(s"Searching for categories")
-      val categoriesFuture = CategoriesDao.findAll
+      val categoriesFuture = categoriesDao.findAll
       val originalSender = sender
       categoriesFuture.onComplete {
         case Success(categories) => originalSender ! categories.toList
@@ -43,7 +41,7 @@ class CategoryActor(categoriesDao: AbstractCategoriesDao) extends Actor with Act
 
     case GetCategoryByID(id) =>
       println(s"Finding category with id: $id")
-      val categoryFuture = CategoriesDao.findById(id)
+      val categoryFuture = categoriesDao.findById(id)
       val originalSender = sender
       categoryFuture.onComplete {
         case Success(category) => originalSender ! category
@@ -66,9 +64,9 @@ class CategoryActor(categoriesDao: AbstractCategoriesDao) extends Actor with Act
       val originalSender = sender
 
       // Save category, topic and post to database
-      val categoryFuture = CategoriesDao.create(category)
-      val topicFuture = TopicsDao.create(topic)
-      val postFuture = PostsDao.create(post)
+      val categoryFuture = categoriesDao.create(category)
+      val topicFuture = topicsDao.create(topic)
+      val postFuture = postsDao.create(post)
 
       // Get results of all futures
       val result = for {
@@ -87,10 +85,10 @@ class CategoryActor(categoriesDao: AbstractCategoriesDao) extends Actor with Act
 
     case UpdateCategory(id, category) =>
       println(s"Updating category $category")
-      val categoryFuture = CategoriesDao.update(id, category)
+      val categoryFuture = categoriesDao.update(id, category)
       val originalSender = sender
       categoryFuture.onComplete {
-        case Success(success) => originalSender ! ActionPerformed(s"Category $id updated")
+        case Success(success) => originalSender ! Message(s"Category $id updated")
         case Failure(e) =>
           println(s"Unable to update category $id")
           e.printStackTrace()
@@ -99,10 +97,10 @@ class CategoryActor(categoriesDao: AbstractCategoriesDao) extends Actor with Act
 
     case DeleteCategory(id) =>
       println(s"Removing category id $id")
-      val categoryFuture = CategoriesDao.delete(id)
+      val categoryFuture = categoriesDao.delete(id)
       val originalSender = sender
       categoryFuture.onComplete {
-        case Success(success) => originalSender ! ActionPerformed(s"Category $id deleted")
+        case Success(success) => originalSender ! Message(s"Category $id deleted")
         case Failure(e) =>
           println(s"Unable to delete category id $id")
           e.printStackTrace()

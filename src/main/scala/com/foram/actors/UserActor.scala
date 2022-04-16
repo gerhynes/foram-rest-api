@@ -3,8 +3,8 @@ package com.foram.actors
 import akka.actor.{Actor, ActorLogging}
 import com.foram.auth.Auth
 import com.foram.auth.Auth.createToken
-import com.foram.dao.{AbstractUsersDao, UsersDao}
-import com.foram.models.{RegisteredUser, User}
+import com.foram.dao.AbstractUsersDao
+import com.foram.models.{Message, RegisteredUser, User}
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -68,21 +68,15 @@ class UserActor(usersDao: AbstractUsersDao) extends Actor with ActorLogging {
           originalSender ! e
       }
 
-    case CreateUser(rawUser) =>
-      println(s"Creating user $rawUser")
-
-      // Create new user with hashed password
-      val user = rawUser match {
-        case User(id, name, username, email, password, role, created_at, updated_at) => User(id, name, username, email, Auth.hashPassword(rawUser.password), role, created_at, updated_at)
-      }
-
+    case CreateUser(user) =>
+      println(s"Creating user ${user.username} ${user.id}")
       val userFuture = usersDao.create(user)
       val originalSender = sender
       userFuture.onComplete {
         case Success(userId) =>
           // Log in created user
           val registeredUser = user match {
-            case User(id, name, username, email, password, role, created_at, updated_at) => RegisteredUser(id, name, username, email, role, created_at, updated_at, createToken(username, 1) )
+            case User(id, name, username, email, password, role, created_at, updated_at) => RegisteredUser(id, name, username, email, role, created_at, updated_at, createToken(username, 7) )
           }
           originalSender ! registeredUser
         case Failure(e) =>
@@ -92,11 +86,11 @@ class UserActor(usersDao: AbstractUsersDao) extends Actor with ActorLogging {
       }
 
     case UpdateUser(id, user) =>
-      println(s"Updating user $user")
+      println(s"Updating user id ${user.id}")
       val userFuture = usersDao.update(id, user)
       val originalSender = sender
       userFuture.onComplete {
-        case Success(success) => originalSender ! ActionPerformed(s"User $id updated")
+        case Success(success) => originalSender ! Message(s"User $id updated")
         case Failure(e) =>
           println(s"Unable to update user $id")
           e.printStackTrace()
@@ -108,7 +102,7 @@ class UserActor(usersDao: AbstractUsersDao) extends Actor with ActorLogging {
       val userFuture = usersDao.delete(id)
       val originalSender = sender
       userFuture.onComplete {
-        case Success(success) => originalSender ! ActionPerformed(s"User $id deleted")
+        case Success(success) => originalSender ! Message(s"User $id deleted")
         case Failure(e) =>
           println(s"Unable to delete user $id")
           e.printStackTrace()

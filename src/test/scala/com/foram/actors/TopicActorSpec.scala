@@ -4,11 +4,11 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
-import com.foram.actors.PostActor.ActionPerformed
-import com.foram.dao.AbstractTopicsDao
-import com.foram.models.{TopicWithChildren, Post, Topic}
+import com.foram.dao.{AbstractPostsDao, AbstractTopicsDao}
+import com.foram.models.{Message, Post, Topic, TopicWithChildren}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterAll
+import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
@@ -28,92 +28,87 @@ class TopicActorSpec extends TestKit(ActorSystem("MySpec"))
     TestKit.shutdownActorSystem(system)
   }
 
-  val sampleTopic: Topic = Topic(UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "I don't understand promises in JavaScript. Help!", "i-dont-understand-promises-in-javascript-help", UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "quince", UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759"), "JavaScript", OffsetDateTime.parse("2022-02-20T09:30:00.155Z"), OffsetDateTime.parse("2022-02-20T09:30:00.155Z"))
-  val samplePost: Post = Post(UUID.fromString("e5760f56-4bf0-4b56-bf6e-2f8c9aee8707"), UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Quincy Lars", UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "i-dont-understand-promises-in-javascript-help", 1, "Lorem ipsum dolor sit amet, consectetur adipiscing enim", OffsetDateTime.parse("2022-02-20T09:30:00.155Z"), OffsetDateTime.parse("2022-03-15T12:41:13.539Z"))
-  val sampleNewTopic: TopicWithChildren = TopicWithChildren(UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "I don't understand promises in JavaScript. Help!", "i-dont-understand-promises-in-javascript-help", UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "quince", UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759"), "JavaScript", OffsetDateTime.parse("2022-02-20T09:30:00.155Z"), OffsetDateTime.parse("2022-02-20T09:30:00.155Z"), List(samplePost))
+  val sampleTopic: Topic = Topic(UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "I don't understand promises in JavaScript. Help!", "i-dont-understand-promises-in-javascript-help", UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "quincy", UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759"), "JavaScript", OffsetDateTime.now(), OffsetDateTime.now())
+  val samplePost: Post = Post(UUID.fromString("e5760f56-4bf0-4b56-bf6e-2f8c9aee8707"), UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "quincy", UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "i-dont-understand-promises-in-javascript-help", 1, "Lorem ipsum dolor sit amet, consectetur adipiscing enim", OffsetDateTime.now(), OffsetDateTime.now())
+  val sampleNewTopic: TopicWithChildren = TopicWithChildren(sampleTopic.id, sampleTopic.title, sampleTopic.slug, sampleTopic.user_id, sampleTopic.username, sampleTopic.category_id, sampleTopic.category_name, sampleTopic.created_at, sampleTopic.updated_at, List(samplePost))
   val mockTopicsDao: AbstractTopicsDao = stub[AbstractTopicsDao]
-  val topicActor: ActorRef = system.actorOf(Props(new TopicActor(mockTopicsDao)), "topicActor")
+  val mockPostsDao: AbstractPostsDao = stub[AbstractPostsDao]
+  val topicActor: ActorRef = system.actorOf(Props(new TopicActor(mockTopicsDao, mockPostsDao)), "topicActor")
 
   implicit val timeout: Timeout = Timeout(5 seconds)
 
-  "A TopicActor" must {
+  "A TopicActor" should {
     "respond to getAllTopics with a list of Topics" in {
       (mockTopicsDao.findAll _).when().returns(Future(Seq(sampleTopic)))
 
       val topicsFuture = topicActor ? TopicActor.GetAllTopics
-      topicsFuture map { topics => assert(topics === List[Topic](sampleTopic)) }
+
+      topicsFuture.futureValue shouldBe List(sampleTopic)
     }
 
     "respond to getLatestTopics with a list of Topics" in {
-      (mockTopicsDao.findAll _).when().returns(Future(Seq(sampleTopic)))
+      (mockTopicsDao.findLatest _).when().returns(Future(Seq(sampleTopic)))
 
       val topicsFuture = topicActor ? TopicActor.GetLatestTopics
-      topicsFuture map { topics => assert(topics === List[Topic](sampleTopic)) }
+
+      topicsFuture.futureValue shouldBe List(sampleTopic)
     }
 
     "respond to getTopicByID with a single Topic" in {
-      val uuid = UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946")
-      (mockTopicsDao.findById _).when(uuid).returns(Future(sampleTopic))
+      (mockTopicsDao.findById _).when(sampleTopic.id).returns(Future(sampleTopic))
 
-      val topicFuture = topicActor ? TopicActor.GetTopicByID(uuid)
-      topicFuture map { topic => assert(topic === sampleTopic) }
+      val topicFuture = topicActor ? TopicActor.GetTopicByID(sampleTopic.id)
+
+      topicFuture.futureValue shouldBe sampleTopic
     }
 
     "respond to getTopicsByCategoryID with a list of Topics" in {
-      val uuid = UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759")
-      (mockTopicsDao.findByCategoryID _).when(uuid).returns(Future(Seq(sampleTopic)))
+      (mockTopicsDao.findByCategoryID _).when(sampleTopic.category_id).returns(Future(Seq(sampleTopic)))
 
-      val topicsFuture = topicActor ? TopicActor.GetTopicsByCategoryID(uuid)
-      topicsFuture map { topics => assert(topics === List[Topic](sampleTopic)) }
+      val topicsFuture = topicActor ? TopicActor.GetTopicsByCategoryID(sampleTopic.category_id)
+
+      topicsFuture.futureValue shouldBe List(sampleTopic)
     }
 
     "respond to getTopicsByUserID with a list of Topics" in {
-      val uuid = UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672")
+      (mockTopicsDao.findByUserID _).when(sampleTopic.user_id).returns(Future(Seq(sampleTopic)))
 
-      (mockTopicsDao.findByUserID _).when(uuid).returns(Future(Seq(sampleTopic)))
+      val topicsFuture = topicActor ? TopicActor.GetTopicsByUserID(sampleTopic.user_id)
 
-      val topicsFuture = topicActor ? TopicActor.GetTopicsByUserID
-      topicsFuture map { topics => assert(topics === List[Topic](sampleTopic)) }
+      topicsFuture.futureValue shouldBe List(sampleTopic)
     }
 
     "respond to getTopicsByUsername with a list of Topics" in {
-      val username = "quince"
-      (mockTopicsDao.findByUsername _).when(username).returns(Future(Seq(sampleTopic)))
+      (mockTopicsDao.findByUsername _).when(sampleTopic.username).returns(Future(Seq(sampleTopic)))
 
-      val topicsFuture = topicActor ? TopicActor.GetTopicsByUsername(username)
-      topicsFuture map { topics => assert(topics === List[Topic](sampleTopic)) }
+      val topicsFuture = topicActor ? TopicActor.GetTopicsByUsername(sampleTopic.username)
+
+      topicsFuture.futureValue shouldBe List(sampleTopic)
     }
 
-    "respond to CreateTopic with confirmation" in {
-      (mockTopicsDao.create _).when(sampleTopic).returns(Future(sampleNewTopic.id))
+    "respond to CreateTopic with created Topic" in {
+      (mockTopicsDao.create _).when(sampleTopic).returns(Future(sampleTopic.id))
+      (mockPostsDao.create _).when(samplePost).returns(Future(samplePost.id))
 
       val topicFuture = topicActor ? TopicActor.CreateTopic(sampleNewTopic)
-      topicFuture map { result =>
-        assert(result === ActionPerformed)
-        expectMsg(s"Topic $result._1 and post $result._2 created.")
-      }
+
+      topicFuture.futureValue shouldBe sampleTopic
     }
 
-    "respond to UpdateTopic with confirmation" in {
-      val uuid = UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946")
-      (mockTopicsDao.update _).when(uuid, sampleTopic).returns(Future(1))
+    "respond to UpdateTopic with confirmation Message" in {
+      (mockTopicsDao.update _).when(sampleTopic.id, sampleTopic).returns(Future(1))
 
-      val topicFuture = topicActor ? TopicActor.UpdateTopic(uuid, sampleTopic)
-      topicFuture map { success =>
-        assert(success === ActionPerformed)
-        expectMsg(s"Topic $uuid updated")
-      }
+      val topicFuture = topicActor ? TopicActor.UpdateTopic(sampleTopic.id, sampleTopic)
+
+      topicFuture.futureValue shouldBe Message(s"Topic ${sampleTopic.id} updated")
     }
 
     "respond to DeleteTopic with confirmation" in {
-      val uuid = UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946")
-      (mockTopicsDao.delete _).when(uuid).returns(Future(1))
+      (mockTopicsDao.delete _).when(sampleTopic.id).returns(Future(1))
 
-      val topicFuture = topicActor ? TopicActor.DeleteTopic(uuid)
-      topicFuture map { success =>
-        assert(success === ActionPerformed)
-        expectMsg(s"Topic $uuid deleted")
-      }
+      val topicFuture = topicActor ? TopicActor.DeleteTopic(sampleTopic.id)
+
+      topicFuture.futureValue shouldBe Message(s"Topic ${sampleTopic.id} deleted")
     }
   }
 }

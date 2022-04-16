@@ -1,8 +1,8 @@
 package com.foram.actors
 
 import akka.actor.{Actor, ActorLogging, Props}
-import com.foram.dao.{AbstractPostsDao, PostsDao}
-import com.foram.models.Post
+import com.foram.dao.AbstractPostsDao
+import com.foram.models.{Message, Post}
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -37,7 +37,7 @@ class PostActor(postsDao: AbstractPostsDao) extends Actor with ActorLogging {
   override def receive: Receive = {
     case GetAllPosts =>
       println(s"Searching for posts")
-      val postsFuture = PostsDao.findAll
+      val postsFuture = postsDao.findAll
       val originalSender = sender
       postsFuture.onComplete {
         case Success(posts) => originalSender ! posts.toList
@@ -49,7 +49,7 @@ class PostActor(postsDao: AbstractPostsDao) extends Actor with ActorLogging {
 
     case GetPostByID(id) =>
       println(s"Finding post with id: $id")
-      val postFuture = PostsDao.findById(id)
+      val postFuture = postsDao.findById(id)
       val originalSender = sender
       postFuture.onComplete {
         case Success(post) => originalSender ! post
@@ -61,7 +61,7 @@ class PostActor(postsDao: AbstractPostsDao) extends Actor with ActorLogging {
 
     case GetPostsByTopicID(topic_id) =>
       println(s"Finding posts with topic_id: $topic_id")
-      val postsFuture = PostsDao.findByTopicID(topic_id)
+      val postsFuture = postsDao.findByTopicID(topic_id)
       val originalSender = sender
       postsFuture.onComplete {
         case Success(posts) => originalSender ! posts.toList
@@ -73,7 +73,7 @@ class PostActor(postsDao: AbstractPostsDao) extends Actor with ActorLogging {
 
     case GetPostsByUserID(user_id) =>
       println(s"Finding posts with user_id: $user_id")
-      val postsFuture = PostsDao.findByUserID(user_id)
+      val postsFuture = postsDao.findByUserID(user_id)
       val originalSender = sender
       postsFuture.onComplete {
         case Success(posts) => originalSender ! posts.toList
@@ -85,7 +85,7 @@ class PostActor(postsDao: AbstractPostsDao) extends Actor with ActorLogging {
 
     case GetPostsByUsername(username) =>
       println(s"Finding posts with username: $username")
-      val postsFuture = PostsDao.findByUsername(username)
+      val postsFuture = postsDao.findByUsername(username)
       val originalSender = sender
       postsFuture.onComplete {
         case Success(posts) => originalSender ! posts.toList
@@ -97,7 +97,7 @@ class PostActor(postsDao: AbstractPostsDao) extends Actor with ActorLogging {
 
     case CreatePost(post) =>
       println(s"Creating post $post")
-      val postFuture = PostsDao.create(post)
+      val postFuture = postsDao.create(post)
       val originalSender = sender
       postFuture.onComplete {
         case Success(postId) => originalSender ! post
@@ -109,10 +109,10 @@ class PostActor(postsDao: AbstractPostsDao) extends Actor with ActorLogging {
 
     case UpdatePost(id, post) =>
       println(s"Updating post $id")
-      val postFuture = PostsDao.update(id, post)
+      val postFuture = postsDao.update(id, post)
       val originalSender = sender
       postFuture.onComplete {
-        case Success(success) => originalSender ! ActionPerformed(s"Post $id updated")
+        case Success(success) => originalSender ! Message(s"Post $id updated")
         case Failure(e) =>
           println(s"Unable to update post $id")
           e.printStackTrace()
@@ -121,10 +121,10 @@ class PostActor(postsDao: AbstractPostsDao) extends Actor with ActorLogging {
 
     case DeletePost(id) =>
       println(s"Removing post id $id")
-      val postFuture = PostsDao.delete(id)
+      val postFuture = postsDao.delete(id)
       val originalSender = sender
       postFuture.onComplete {
-        case Success(success) => originalSender ! ActionPerformed(s"Post $id deleted")
+        case Success(success) => originalSender ! Message(s"Post $id deleted")
         case Failure(e) =>
           println(s"Unable to delete post $id")
           e.printStackTrace()
