@@ -10,11 +10,10 @@ import akka.http.scaladsl.testkit.{RouteTestTimeout, ScalatestRouteTest}
 import akka.pattern.ask
 import akka.testkit.TestProbe
 import akka.util.Timeout
-import com.foram.actors.CategoryActor.{CreateCategory, DeleteCategory, GetAllCategories, GetCategoryByID, UpdateCategory}
-import com.foram.actors.{PostActor, TopicActor}
-import com.foram.actors.TopicActor._
+import com.foram.actors.CategoryActor._
+import com.foram.actors.TopicActor
 import com.foram.auth.Auth
-import com.foram.models.{Category, CategoryWithChildren, Topic, TopicWithChildren, Post => MyPost}
+import com.foram.models.{Category, CategoryWithChildren, Message, Topic, Post => MyPost}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -62,9 +61,7 @@ class CategoryRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures wit
 
       test ~> check {
         status should ===(StatusCodes.OK)
-
         contentType should ===(ContentTypes.`application/json`)
-
         entityAs[String] should ===(List[Category](sampleCategory).toJson.toString())
       }
     }
@@ -84,9 +81,7 @@ class CategoryRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures wit
 
       test ~> check {
         status should ===(StatusCodes.OK)
-
         contentType should ===(ContentTypes.`application/json`)
-
         entityAs[String] should ===(sampleCategory.toJson.toString())
       }
     }
@@ -106,9 +101,7 @@ class CategoryRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures wit
 
       test ~> check {
         status should ===(StatusCodes.OK)
-
         contentType should ===(ContentTypes.`application/json`)
-
         entityAs[String] should ===(List(sampleTopic).toJson.toString())
       }
     }
@@ -130,9 +123,7 @@ class CategoryRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures wit
 
       test ~> check {
         status should ===(StatusCodes.Created)
-
         contentType should ===(ContentTypes.`application/json`)
-
         entityAs[String] should ===(sampleCategory.toJson.toString())
       }
     }
@@ -150,10 +141,12 @@ class CategoryRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures wit
       // Mock actor behaviour
       categoryProbe.ref ? UpdateCategory(sampleCategory.id, sampleCategory)
       categoryProbe.expectMsg(3000 millis, UpdateCategory(sampleCategory.id, sampleCategory))
-      categoryProbe.reply(ActionPerformed(s"Category ${sampleCategory.id} updated"))
+      categoryProbe.reply(Message(s"Category ${sampleCategory.id} updated"))
 
       test ~> check {
         status should ===(StatusCodes.OK)
+        contentType should ===(ContentTypes.`application/json`)
+        entityAs[String] should ===(Message(s"Category ${sampleCategory.id} updated").toJson.toString())
       }
     }
     "delete a Category on DELETE requests to /api/categories/:categoryId" in {
@@ -168,10 +161,12 @@ class CategoryRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures wit
       // Mock actor behaviour
       categoryProbe.ref ? DeleteCategory(sampleCategory.id)
       categoryProbe.expectMsg(3000 millis, DeleteCategory(sampleCategory.id))
-      categoryProbe.reply(ActionPerformed(s"Category ${sampleCategory.id} deleted"))
+      categoryProbe.reply(Message(s"Category ${sampleCategory.id} deleted"))
 
       test ~> check {
         status should ===(StatusCodes.OK)
+        contentType should ===(ContentTypes.`application/json`)
+        entityAs[String] should ===(Message(s"Category ${sampleCategory.id} deleted").toJson.toString())
       }
     }
   }
