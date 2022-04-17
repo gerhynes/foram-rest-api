@@ -8,7 +8,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.foram.actors.UserActor.GetUserByUsername
 import com.foram.auth.Auth.{createToken, validatePassword}
-import com.foram.models.{LoginRequest, RegisteredUser, User}
+import com.foram.models.{LoginRequest, Message, RegisteredUser, User}
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
@@ -33,11 +33,11 @@ class AuthRoutes(userActor: ActorRef) {
                 }
                 complete(StatusCodes.OK, registeredUser)
               } else {
-                complete(HttpResponse(status = StatusCodes.Unauthorized, entity = "Incorrect username or password"))
+                complete(StatusCodes.Unauthorized, Message("Invalid username or password"))
               }
-            case Failure(ex) => complete(StatusCodes.Unauthorized)
+            case Failure(ex) => complete(StatusCodes.Unauthorized, Message("Invalid username or password"))
           }
-        case _ => complete(StatusCodes.Unauthorized)
+        case _ => complete(StatusCodes.BadRequest, Message("Please submit valid username and password"))
       }
     }
   }
