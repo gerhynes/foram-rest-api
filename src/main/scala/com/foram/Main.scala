@@ -9,17 +9,21 @@ import com.foram.routes._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
+import slick.jdbc.PostgresProfile.api._
 
 object Main extends App {
   // Set up actor system
   implicit val system = ActorSystem("foramSystem")
   implicit val materializer = ActorMaterializer()
 
+  // Provide database config
+  def db = Database.forConfig("postgresDB")
+
   // Set up actors
-  val categoryActor = system.actorOf(Props (new CategoryActor(CategoriesDao, TopicsDao, PostsDao)), "categoryActor")
-  val userActor = system.actorOf(Props (new UserActor(UsersDao)), "userActor")
-  val topicActor = system.actorOf(Props (new TopicActor(TopicsDao, PostsDao)), "topicActor")
-  val postActor = system.actorOf(Props (new PostActor(PostsDao)), "postActor")
+  val categoryActor = system.actorOf(Props (new CategoryActor(new CategoriesDao(db), new TopicsDao(db), new PostsDao(db))), "categoryActor")
+  val userActor = system.actorOf(Props (new UserActor(new UsersDao(db))), "userActor")
+  val topicActor = system.actorOf(Props (new TopicActor(new TopicsDao(db), new PostsDao(db))), "topicActor")
+  val postActor = system.actorOf(Props (new PostActor(new PostsDao(db))), "postActor")
 
   // Get all routes
   val routes = new MainRouter(categoryActor, userActor, topicActor, postActor).routes

@@ -1,13 +1,14 @@
 package com.foram.dao
 
 import com.foram.models.Post
+import slick.jdbc.PostgresProfile
 import slick.jdbc.PostgresProfile.api._
 
 import java.util.UUID
 import scala.concurrent.Future
 
 // Singleton object for database transactions
-object PostsDao extends BaseDao with AbstractPostsDao {
+class PostsDao(db: PostgresProfile.backend.Database) extends BaseDao with AbstractPostsDao {
   def findAll: Future[Seq[Post]] = db.run(posts.sortBy(_.createdAt.asc).result)
 
   def findById(id: UUID): Future[Post] = db.run(posts.filter(_.id === id).result.head)

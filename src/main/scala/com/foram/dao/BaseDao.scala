@@ -5,7 +5,7 @@ import slick.jdbc.PostgresProfile.api._
 import slick.lifted.TableQuery
 
 trait BaseDao {
-  def db = Database.forConfig("postgresDB")
+//  def db = Database.forConfig("postgresDB")
 
   val categories = TableQuery[CategoriesTable]
   val users = TableQuery[UsersTable]
