@@ -30,7 +30,7 @@ class UserActorSpec extends TestKit(ActorSystem("MySpec"))
     TestKit.shutdownActorSystem(system)
   }
 
-  val sampleUser: User = User(randomUUID(), "Quincy Lars", "quincy", "qlars@example.com", Auth.hashPassword("password123"), "admin", OffsetDateTime.now(), OffsetDateTime.now())
+  val sampleUser: User = User(randomUUID(), "Quincy Lars", "quincy", "qlars@example.com","password123", "admin", OffsetDateTime.now(), OffsetDateTime.now())
   val mockUsersDao: AbstractUsersDao = stub[AbstractUsersDao]
   val userActor: ActorRef = system.actorOf(Props(new UserActor(mockUsersDao)), "userActor")
 

@@ -30,7 +30,7 @@ class PostActorSpec extends TestKit(ActorSystem("MySpec"))
   }
 
   val samplePost: Post = Post(UUID.fromString("e5760f56-4bf0-4b56-bf6e-2f8c9aee8707"), UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Quincy Lars", UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "i-dont-understand-promises-in-javascript-help", 1, "Lorem ipsum dolor sit amet, consectetur adipiscing enim", OffsetDateTime.now(), OffsetDateTime.now())
-  val sampleUser: User = User(UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Quincy Lars", "quincy", "qlars@example.com", Auth.hashPassword("password123"), "admin", OffsetDateTime.now(), OffsetDateTime.now())
+  val sampleUser: User = User(UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Quincy Lars", "quincy", "qlars@example.com","password123", "admin", OffsetDateTime.now(), OffsetDateTime.now())
   val mockPostsDao: AbstractPostsDao = stub[AbstractPostsDao]
   val postActor: ActorRef = system.actorOf(Props(new PostActor(mockPostsDao)), "postActor")
 

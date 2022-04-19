@@ -1,14 +1,14 @@
 package com.foram.dao
 
-import com.foram.models.{Post, Topic}
+import com.foram.models.{Topic, TopicsTable}
 import slick.jdbc.PostgresProfile
 import slick.jdbc.PostgresProfile.api._
+import slick.lifted.TableQuery
 
 import java.util.UUID
 import scala.concurrent.Future
 
-// Singleton object for database transactions
-class TopicsDao(db: PostgresProfile.backend.Database) extends BaseDao with AbstractTopicsDao {
+class TopicsDao(db: PostgresProfile.backend.Database) extends AbstractTopicsDao {
   def findAll: Future[Seq[Topic]] = db.run(topics.sortBy(_.createdAt.asc).result)
 
   def findLatest: Future[Seq[Topic]] = db.run(topics.sortBy(_.createdAt.desc).take(10).result)
@@ -29,7 +29,9 @@ class TopicsDao(db: PostgresProfile.backend.Database) extends BaseDao with Abstr
 }
 
 // trait for mocking purposes
-trait AbstractTopicsDao extends BaseDao {
+trait AbstractTopicsDao {
+  val topics = TableQuery[TopicsTable]
+
   def findAll: Future[Seq[Topic]]
 
   def findLatest: Future[Seq[Topic]]
