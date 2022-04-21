@@ -1,12 +1,16 @@
 package com.foram.routes
 
 import akka.actor.ActorRef
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Directive, ExceptionHandler, RejectionHandler, Route}
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
+import com.foram.models.Message
 
 class MainRouter(categoryActor: ActorRef, userActor: ActorRef, topicActor: ActorRef, postActor: ActorRef) {
+  import com.foram.JsonFormats._
+
   // Instantiate routes
   val authRoutes: Route = new AuthRoutes(userActor).routes
   val categoryRoutes: Route = new CategoryRoutes(categoryActor, topicActor).routes
@@ -20,13 +24,13 @@ class MainRouter(categoryActor: ActorRef, userActor: ActorRef, topicActor: Actor
   // Custom exception handler
   val exceptionHandler: ExceptionHandler = ExceptionHandler {
     case e: NoSuchElementException =>
-      complete(StatusCodes.NotFound, "Cannot find resource")
+      complete(StatusCodes.NotFound, Message("Cannot find resource"))
     case e: ClassCastException =>
-      complete(StatusCodes.NotFound, "Incorrect resource returned")
+      complete(StatusCodes.NotFound, Message("Incorrect resource returned"))
     case e: IllegalArgumentException =>
-      complete(StatusCodes.BadRequest, "Illegal argument passed")
+      complete(StatusCodes.BadRequest, Message("Illegal argument passed"))
     case e: RuntimeException =>
-      complete(StatusCodes.NotFound, e.getMessage)
+      complete(StatusCodes.InternalServerError, Message(e.getMessage))
   }
 
   val handleErrors: Directive[Unit] = handleRejections(rejectionHandler) & handleExceptions(exceptionHandler)
