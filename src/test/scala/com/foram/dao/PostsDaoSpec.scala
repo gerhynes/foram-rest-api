@@ -31,11 +31,7 @@ class PostsDaoSpec extends AnyWordSpec with Matchers with BeforeAndAfter with Sc
   val sampleTopic: Topic = Topic(UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "I don't understand promises in JavaScript. Help!", "i-dont-understand-promises-in-javascript-help", UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "quince", UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759"), "JavaScript", OffsetDateTime.now(), OffsetDateTime.now())
   val samplePost: Post = Post(UUID.fromString("e5760f56-4bf0-4b56-bf6e-2f8c9aee8707"), UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Quincy Lars", UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "i-dont-understand-promises-in-javascript-help", 1, "Lorem ipsum dolor sit amet, consectetur adipiscing enim", OffsetDateTime.now(), OffsetDateTime.now())
   val sampleUser: User = User(UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Quincy Lars", "quincy", "qlars@example.com", "password123", "admin", OffsetDateTime.now(), OffsetDateTime.now())
-  val sampleUpdatedUser: User = User(UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Quincy Lars", "quincy", "qlars@gmail.com", Auth.hashPassword("password123"), "admin", OffsetDateTime.now(), OffsetDateTime.now())
-  val sampleNewUser: User = User(UUID.fromString("6a3f2a60-fbc1-4542-ac15-a4ceec2ad3de"), "Chris Hadfield", "cmdrHadfield", "chadfield@example.com", "password123", "admin", OffsetDateTime.now(), OffsetDateTime.now())
-
   val sampleUpdatedPost: Post = Post(UUID.fromString("e5760f56-4bf0-4b56-bf6e-2f8c9aee8707"), UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Quincy Lars", UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "i-dont-understand-promises-in-javascript-help", 1, "Excepteur sint occaecat cupidatat non proident", OffsetDateTime.now(), OffsetDateTime.now())
-
   val sampleNewPost: Post = Post(UUID.fromString("a7dc08d5-c180-4809-8843-903f66355a3b"), UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Quincy Lars", UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "i-dont-understand-promises-in-javascript-help", 2, "Vitae suscipit tellus mauris a diam maecenas sed enim ut.", OffsetDateTime.now(), OffsetDateTime.now())
 
 
@@ -73,7 +69,7 @@ class PostsDaoSpec extends AnyWordSpec with Matchers with BeforeAndAfter with Sc
     "return an empty Seq from findAll if posts table is empty" in {
       val postsDao = new PostsDao(db)
 
-      // Delete sampleUser
+      // Delete samplePost
       db.run(posts.filter(_.id === samplePost.id).delete)
 
       val postsFuture = postsDao.findAll
