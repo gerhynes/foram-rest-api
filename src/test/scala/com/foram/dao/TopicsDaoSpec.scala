@@ -14,6 +14,10 @@ import java.time.OffsetDateTime
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.math.Ordered.orderingToOrdered
+
+import java.time._
+import scala.math.Ordering.Implicits._
 
 class TopicsDaoSpec extends AnyWordSpec with Matchers with BeforeAndAfter with ScalaFutures {
   val db: PostgresProfile.backend.Database = Database.forConfig("testDB")
@@ -77,14 +81,17 @@ class TopicsDaoSpec extends AnyWordSpec with Matchers with BeforeAndAfter with S
     }
 
     "return a Seq of Topics ordered by created_at from findLatest" in {
+      // Specify OffsetDateTime to be converted to milliseconds and compared
+      implicit def ord: Ordering[OffsetDateTime] = Ordering.by(_.toInstant.toEpochMilli)
+
       val topicsDao = new TopicsDao(db)
 
       db.run(topics.returning(topics.map(_.id)) += sampleNewTopic)
 
       val topicsFuture = topicsDao.findLatest
 
-      topicsFuture.futureValue shouldBe Seq(sampleNewTopic, sampleTopic)
-      topicsFuture.futureValue.toList.head.created_at shouldBe >(topicsFuture.futureValue.toList(1).created_at)
+      // Cannot assert list order as two topics may have the exact same timestamp
+      topicsFuture.futureValue.toList.head.created_at shouldBe >=(topicsFuture.futureValue.tail.head.created_at)
     }
 
     "return a specific Topic from findById" in {
