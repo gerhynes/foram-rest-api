@@ -28,9 +28,9 @@ class TopicsTable(tag: Tag) extends Table[Topic](tag, "topics") {
 
   def updatedAt = column[OffsetDateTime]("updated_at")
 
-  def user = foreignKey("user_fk", userID, TableQuery[UsersTable])(_.id, onUpdate = ForeignKeyAction.Restrict, onDelete = ForeignKeyAction.Cascade)
+  def user = foreignKey("topic_user_fk", userID, TableQuery[UsersTable])(_.id, onUpdate = ForeignKeyAction.Restrict, onDelete = ForeignKeyAction.Cascade)
 
-  def category = foreignKey("category_fk", categoryID, TableQuery[CategoriesTable])(_.id, onUpdate = ForeignKeyAction.Restrict, onDelete = ForeignKeyAction.Cascade)
+  def category = foreignKey("topic_category_fk", categoryID, TableQuery[CategoriesTable])(_.id, onUpdate = ForeignKeyAction.Restrict, onDelete = ForeignKeyAction.Cascade)
 
   def * = (id, title, slug, userID, username, categoryID, categoryName, createdAt, updatedAt) <> (Topic.tupled, Topic.unapply)
 }
