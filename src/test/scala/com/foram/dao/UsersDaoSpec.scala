@@ -106,7 +106,7 @@ class UsersDaoSpec extends AnyWordSpec with Matchers with BeforeAndAfter with Sc
       userFuture.futureValue.id shouldBe sampleNewUser.id
     }
 
-    "update a User from UpdateUser" in {
+    "update a User record from UpdateUser" in {
       val usersDao = new UsersDao(db)
 
       val rowsAffectedFuture = usersDao.update(sampleUser.id, sampleUpdatedUser)
@@ -118,7 +118,7 @@ class UsersDaoSpec extends AnyWordSpec with Matchers with BeforeAndAfter with Sc
       userFuture.futureValue should !==(sampleUser)
     }
 
-    "delete a User from DeleteUser" in {
+    "delete a User record from DeleteUser" in {
       val usersDao = new UsersDao(db)
 
       val rowsAffectedFuture = usersDao.delete(sampleUser.id)
