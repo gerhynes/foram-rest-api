@@ -4,7 +4,6 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
-import com.foram.auth.Auth
 import com.foram.dao.AbstractUsersDao
 import com.foram.models.{Message, RegisteredUser, User}
 import org.scalamock.scalatest.MockFactory

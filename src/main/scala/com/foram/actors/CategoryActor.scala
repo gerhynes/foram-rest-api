@@ -58,7 +58,6 @@ class CategoryActor(categoriesDao: AbstractCategoriesDao, topicsDao: AbstractTop
       val category = newCategory match {
         case CategoryWithChildren(id, name, slug, user_id, description, created_at, updated_at, topics) => Category(id, name, slug, user_id, description, created_at, updated_at)
       }
-
       // Separate post from topic
       val newTopic = newCategory.topics.head
       val topic = newTopic match {
@@ -67,10 +66,6 @@ class CategoryActor(categoriesDao: AbstractCategoriesDao, topicsDao: AbstractTop
       val post = newTopic.posts.head
 
       val originalSender = sender
-
-      println(category)
-      println(topic)
-      println(post)
 
       // Save category, topic and post to database
       val categoryFuture = categoriesDao.create(category)
