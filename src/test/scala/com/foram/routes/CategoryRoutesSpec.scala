@@ -13,7 +13,7 @@ import akka.util.Timeout
 import com.foram.actors.CategoryActor._
 import com.foram.actors.TopicActor
 import com.foram.auth.Auth
-import com.foram.models.{Category, CategoryWithChildren, Message, Topic, Post => MyPost}
+import com.foram.models.{Category, CategoryWithChildren, Message, Topic, TopicWithChildren, Post => MyPost}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -32,9 +32,10 @@ class CategoryRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures wit
   implicit val timeout: Timeout = Timeout(5 seconds)
 
   val sampleCategory: Category = Category(UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759"), "JavaScript", "javascript", UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Ask questions and share tips for JavaScript, React, Node - anything to do with the JavaScript ecosystem.", OffsetDateTime.now(), OffsetDateTime.now())
-  val sampleTopic: Topic = Topic(UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "I don't understand promises in JavaScript. Help!", "i-dont-understand-promises-in-javascript-help", UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "quince", UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759"), "JavaScript", OffsetDateTime.now(), OffsetDateTime.now())
+  val sampleTopic: Topic = Topic(UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "I don't understand promises in JavaScript. Help!", "i-dont-understand-promises-in-javascript-help", UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "quincy", UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759"), "JavaScript", OffsetDateTime.now(), OffsetDateTime.now())
   val samplePost: MyPost = MyPost(UUID.fromString("e5760f56-4bf0-4b56-bf6e-2f8c9aee8707"), UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Quincy Lars", UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "i-dont-understand-promises-in-javascript-help", 1, "Lorem ipsum dolor sit amet, consectetur adipiscing enim", OffsetDateTime.now(), OffsetDateTime.now())
-  val sampleCategoryWithChildren: CategoryWithChildren =   CategoryWithChildren(UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759"), "JavaScript", "javascript", UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Ask questions and share tips for JavaScript, React, Node - anything to do with the JavaScript ecosystem.", OffsetDateTime.now(), OffsetDateTime.now(), List(sampleTopic), List(samplePost))
+  val sampleNewTopic: TopicWithChildren = TopicWithChildren(UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "I don't understand promises in JavaScript. Help!", "i-dont-understand-promises-in-javascript-help", UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "quincy", UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759"), "JavaScript", OffsetDateTime.now(), OffsetDateTime.now(), List(samplePost))
+  val sampleNewCategory: CategoryWithChildren = CategoryWithChildren(UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759"), "JavaScript", "javascript", UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Ask questions and share tips for JavaScript, React, Node - anything to do with the JavaScript ecosystem.", sampleCategory.created_at, sampleCategory.updated_at, List(sampleNewTopic))
 
   val sampleToken: String = Auth.createToken("quincy", 7)
 
@@ -112,13 +113,13 @@ class CategoryRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures wit
 
       val categoryRoutes: Route = new CategoryRoutes(categoryProbe.ref, topicProbe.ref).routes
 
-      val categoryEntity = Marshal(sampleCategoryWithChildren).to[MessageEntity].futureValue
+      val newCategoryEntity = Marshal(sampleNewCategory).to[MessageEntity].futureValue
 
-      val test = Post("/api/categories").withEntity(categoryEntity) ~> RawHeader("Authorization", s"Bearer $sampleToken") ~> categoryRoutes
+      val test = Post("/api/categories").withEntity(newCategoryEntity) ~> RawHeader("Authorization", s"Bearer $sampleToken") ~> categoryRoutes
 
       // Mock actor behaviour
-      categoryProbe.ref ? CreateCategory(sampleCategoryWithChildren)
-      categoryProbe.expectMsg(3000 millis, CreateCategory(sampleCategoryWithChildren))
+      categoryProbe.ref ? CreateCategory(sampleNewCategory)
+      categoryProbe.expectMsg(3000 millis, CreateCategory(sampleNewCategory))
       categoryProbe.reply(sampleCategory)
 
       test ~> check {

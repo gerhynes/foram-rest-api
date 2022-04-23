@@ -2,7 +2,7 @@ package com.foram.actors
 
 import akka.actor.{Actor, ActorLogging, Props}
 import com.foram.dao.{AbstractCategoriesDao, AbstractPostsDao, AbstractTopicsDao}
-import com.foram.models.{Category, CategoryWithChildren, Message}
+import com.foram.models.{Category, CategoryWithChildren, Message, Topic, TopicWithChildren}
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -54,14 +54,23 @@ class CategoryActor(categoriesDao: AbstractCategoriesDao, topicsDao: AbstractTop
     case CreateCategory(newCategory) =>
       println(s"Creating new category from $newCategory")
 
-      // Separate category, topic and post
+      // Separate category from topic
       val category = newCategory match {
-        case CategoryWithChildren(id, name, slug, user_id, description, created_at, updated_at, topics, posts) => Category(id, name, slug, user_id, description, created_at, updated_at)
+        case CategoryWithChildren(id, name, slug, user_id, description, created_at, updated_at, topics) => Category(id, name, slug, user_id, description, created_at, updated_at)
       }
-      val topic = newCategory.topics.head
-      val post = newCategory.posts.head
+
+      // Separate post from topic
+      val newTopic = newCategory.topics.head
+      val topic = newTopic match {
+        case TopicWithChildren(id, title, slug, user_id, username, category_id, category_name, created_at, updated_at, posts) => Topic(id, title, slug, user_id, username, category_id, category_name, created_at, updated_at)
+      }
+      val post = newTopic.posts.head
 
       val originalSender = sender
+
+      println(category)
+      println(topic)
+      println(post)
 
       // Save category, topic and post to database
       val categoryFuture = categoriesDao.create(category)
