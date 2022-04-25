@@ -120,17 +120,11 @@ class TopicActor(topicsDao: AbstractTopicsDao, postsDao: AbstractPostsDao) exten
       val originalSender = sender
 
       // Save topic and post to database
-      val topicFuture = topicsDao.create(topic)
-      val postFuture = postsDao.create(post)
+      // Chain futures to prevent foreign key constraint violation
+      val newTopicFuture = topicsDao.create(topic).flatMap(_ => postsDao.create(post))
 
-      // Get results of both futures
-      val result = for {
-        topic_id <- topicFuture
-        post_id <- postFuture
-      } yield (topic_id, post_id)
-
-      result.onComplete {
-        case Success(result) => originalSender ! topic
+      newTopicFuture.onComplete {
+        case Success(_) => originalSender ! topic
         case Failure(ex) =>
           println(s"Unable to create topic $topic")
           ex.printStackTrace()
@@ -142,7 +136,7 @@ class TopicActor(topicsDao: AbstractTopicsDao, postsDao: AbstractPostsDao) exten
       val updateFuture = topicsDao.update(id, topic)
       val originalSender = sender
       updateFuture.onComplete {
-        case Success(success) => originalSender ! Message(s"Topic $id updated")
+        case Success(_) => originalSender ! Message(s"Topic $id updated")
         case Failure(ex) =>
           println(s"Unable to update topic $id")
           ex.printStackTrace()
@@ -154,7 +148,7 @@ class TopicActor(topicsDao: AbstractTopicsDao, postsDao: AbstractPostsDao) exten
       val topicFuture = topicsDao.delete(id)
       val originalSender = sender
       topicFuture.onComplete {
-        case Success(success) => originalSender ! Message(s"Topic $id deleted")
+        case Success(_) => originalSender ! Message(s"Topic $id deleted")
         case Failure(ex) =>
           println(s"Unable to delete topic $id")
           ex.printStackTrace()
