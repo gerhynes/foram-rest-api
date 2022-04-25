@@ -68,19 +68,11 @@ class CategoryActor(categoriesDao: AbstractCategoriesDao, topicsDao: AbstractTop
       val originalSender = sender
 
       // Save category, topic and post to database
-      val categoryFuture = categoriesDao.create(category)
-      val topicFuture = topicsDao.create(topic)
-      val postFuture = postsDao.create(post)
+      // Chain futures to prevent foreign key constraint violation
+      val newCategoryFuture = categoriesDao.create(category).flatMap(_ => topicsDao.create(topic)).flatMap(_ => postsDao.create(post))
 
-      // Get results of all futures
-      val result = for {
-        category_id <- categoryFuture
-        topic_id <- topicFuture
-        post_id <- postFuture
-      } yield (category_id, topic_id, post_id)
-
-      result.onComplete {
-        case Success(result) => originalSender ! category
+      newCategoryFuture.onComplete {
+        case Success(_) => originalSender ! category
         case Failure(e) =>
           println(s"Unable to create category $category")
           e.printStackTrace()
@@ -92,7 +84,7 @@ class CategoryActor(categoriesDao: AbstractCategoriesDao, topicsDao: AbstractTop
       val categoryFuture = categoriesDao.update(id, category)
       val originalSender = sender
       categoryFuture.onComplete {
-        case Success(success) => originalSender ! Message(s"Category $id updated")
+        case Success(_) => originalSender ! Message(s"Category $id updated")
         case Failure(e) =>
           println(s"Unable to update category $id")
           e.printStackTrace()
@@ -104,7 +96,7 @@ class CategoryActor(categoriesDao: AbstractCategoriesDao, topicsDao: AbstractTop
       val categoryFuture = categoriesDao.delete(id)
       val originalSender = sender
       categoryFuture.onComplete {
-        case Success(success) => originalSender ! Message(s"Category $id deleted")
+        case Success(_) => originalSender ! Message(s"Category $id deleted")
         case Failure(e) =>
           println(s"Unable to delete category id $id")
           e.printStackTrace()
