@@ -12,9 +12,9 @@ case class TopicWithChildren(id: UUID, title: String, slug: String, user_id: UUI
 class TopicsTable(tag: Tag) extends Table[Topic](tag, "topics") {
   def id = column[UUID]("id", O.PrimaryKey)
 
-  def title = column[String]("title")
+  def title = column[String]("title", O.Unique)
 
-  def slug = column[String]("slug")
+  def slug = column[String]("slug", O.Unique)
 
   def userID = column[UUID]("user_id")
 
@@ -28,9 +28,11 @@ class TopicsTable(tag: Tag) extends Table[Topic](tag, "topics") {
 
   def updatedAt = column[OffsetDateTime]("updated_at")
 
-  def user = foreignKey("topic_user_fk", userID, TableQuery[UsersTable])(_.id, onUpdate = ForeignKeyAction.Restrict, onDelete = ForeignKeyAction.Cascade)
+  def user = foreignKey("topic_user_fk", userID, TableQuery[UsersTable])(_.id, onUpdate = ForeignKeyAction.Cascade, onDelete = ForeignKeyAction.Cascade)
 
-  def category = foreignKey("topic_category_fk", categoryID, TableQuery[CategoriesTable])(_.id, onUpdate = ForeignKeyAction.Restrict, onDelete = ForeignKeyAction.Cascade)
+  def category = foreignKey("topic_category_fk", categoryID, TableQuery[CategoriesTable])(_.id, onUpdate = ForeignKeyAction.Cascade, onDelete = ForeignKeyAction.Cascade)
+
+  def categoryNameFK = foreignKey("topic_category_name_fk", categoryName, TableQuery[CategoriesTable])(_.name, onUpdate = ForeignKeyAction.Cascade, onDelete = ForeignKeyAction.Cascade)
 
   def * = (id, title, slug, userID, username, categoryID, categoryName, createdAt, updatedAt) <> (Topic.tupled, Topic.unapply)
 }

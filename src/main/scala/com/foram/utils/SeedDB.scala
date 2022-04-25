@@ -30,7 +30,7 @@ object SeedDB extends App {
     // Seed database
     val setupAction = DBIO.seq(
       // Set up schemas
-      (users.schema ++ categories.schema ++ topics.schema ++ posts.schema).createIfNotExists,
+      (users.schema ++ categories.schema ++ topics.schema ++ posts.schema).create,
 
       // Insert users
       users += User(userIds(0), "Quincy Lars", "quincy", "qlars@example.com", Auth.hashPassword("password123"), "admin", OffsetDateTime.now(), OffsetDateTime.now()),
@@ -54,7 +54,7 @@ object SeedDB extends App {
       topics += Topic(topicIds(5), "Akka Persistence makes no sense, like none at all!", "akka-persistence-makes-no-sense-like-none-at-all", userIds(2), "naziyah", categoryIds(2), "Scala", OffsetDateTime.now(), OffsetDateTime.now()),
       topics += Topic(topicIds(6), "How do you convert a Pandas DataFrame to a NumPy array?", "how-do-you-convert-a-pandas-dataframe-to-a-numpy-array", userIds(1), "beatz", categoryIds(3), "Python", OffsetDateTime.now(), OffsetDateTime.now()),
       topics += Topic(topicIds(7), "Postgres connection pool timeout issue", "postgres-connection-pool-timeout-issue", userIds(2), "naziyah", categoryIds(4), "Databases", OffsetDateTime.now(), OffsetDateTime.now()),
-      topics += Topic(topicIds(8), "Setting up GitHub Actions with sbt", "setting-up-github-actions-with-sbt", userIds(2), "naziyah", categoryIds(5), "Devops", OffsetDateTime.now(), OffsetDateTime.now()),
+      topics += Topic(topicIds(8), "Setting up GitHub Actions with sbt", "setting-up-github-actions-with-sbt", userIds(2), "naziyah", categoryIds(5), "DevOps", OffsetDateTime.now(), OffsetDateTime.now()),
 
       // Insert posts
       posts += Post(postIds(0), userIds(0), "quincy", topicIds(0), "i-dont-understand-promises-in-javascript-help", 1, "Lorem ipsum dolor sit amet, consectetur adipiscing elit", OffsetDateTime.now(), OffsetDateTime.now()),
@@ -77,7 +77,7 @@ object SeedDB extends App {
     val setupFuture = db.run(setupAction)
 
     setupFuture.onComplete {
-      case Success(success) => println("Db seeded")
+      case Success(_) => println("Database seeded")
       case Failure(e) => e.printStackTrace()
     }
   } finally db.close
