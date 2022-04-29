@@ -4,7 +4,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
-import com.foram.dao.{AbstractPostsDao, AbstractTopicsDao}
+import com.foram.daos.{AbstractPostsDao, AbstractTopicsDao}
 import com.foram.models.{Message, Post, Topic, TopicWithChildren}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterAll

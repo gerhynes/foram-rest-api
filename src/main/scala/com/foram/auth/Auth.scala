@@ -39,7 +39,7 @@ object Auth {
   }
 
   def createToken(username: String, expirationPeriodInDays: Int): String = {
-    val usernameClaim = s"""{"username":"${username}"}"""
+    val usernameClaim = s"""{"username":"$username"}"""
     Jwt.encode(JwtClaim({usernameClaim}).issuedNow.expiresIn(TimeUnit.DAYS.toSeconds(expirationPeriodInDays)), secretKey, algorithm)
   }
 
@@ -61,7 +61,7 @@ object Auth {
           } else {
             Jwt.decodeRaw(token, secretKey, Seq(algorithm)) match {
               case Success(claims) => provide(claims)
-              case Failure(failure) =>
+              case Failure(ex) =>
                 complete(HttpResponse(status = StatusCodes.Unauthorized, entity = "Token is invalid, or has been tampered with"))
             }
           }

@@ -7,14 +7,14 @@ import java.util.UUID
 
 case class Category(id: UUID, name: String, slug: String, user_id: UUID, description: String, created_at: OffsetDateTime, updated_at: OffsetDateTime)
 
-case class CategoryWithChildren(id: UUID, name: String, slug: String, user_id: UUID, description: String, created_at: OffsetDateTime, updated_at: OffsetDateTime, topics: List[Topic], posts: List[Post])
+case class CategoryWithChildren(id: UUID, name: String, slug: String, user_id: UUID, description: String, created_at: OffsetDateTime, updated_at: OffsetDateTime, topics: List[TopicWithChildren])
 
 class CategoriesTable(tag: Tag) extends Table[Category](tag, "categories") {
   def id = column[UUID]("id", O.PrimaryKey)
 
-  def name = column[String]("name")
+  def name = column[String]("name", O.Unique)
 
-  def slug = column[String]("slug")
+  def slug = column[String]("slug", O.Unique)
 
   def userID = column[UUID]("user_id")
 
@@ -24,7 +24,7 @@ class CategoriesTable(tag: Tag) extends Table[Category](tag, "categories") {
 
   def updatedAt = column[OffsetDateTime]("updated_at")
 
-  def user = foreignKey("user_fk", userID, TableQuery[UsersTable])(_.id, onUpdate = ForeignKeyAction.Restrict, onDelete = ForeignKeyAction.Cascade)
+  def user = foreignKey("category_user_fk", userID, TableQuery[UsersTable])(_.id, onUpdate = ForeignKeyAction.Cascade, onDelete = ForeignKeyAction.Cascade)
 
   // Every table needs a * projection with the same type as the table's type parameter
   def * = (id, name, slug, userID, description, createdAt, updatedAt) <> (Category.tupled, Category.unapply)

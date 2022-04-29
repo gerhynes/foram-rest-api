@@ -26,9 +26,14 @@ class PostsTable(tag: Tag) extends Table[Post](tag, "posts") {
 
   def updatedAt = column[OffsetDateTime]("updated_at")
 
-  def user = foreignKey("user_fk", userID, TableQuery[UsersTable])(_.id, onUpdate = ForeignKeyAction.Restrict, onDelete = ForeignKeyAction.Cascade)
+  def user = foreignKey("post_user_fk", userID,
+    TableQuery[UsersTable])(_.id, onUpdate = ForeignKeyAction.Cascade, onDelete = ForeignKeyAction.Cascade)
 
-  def topic = foreignKey("topic_fk", topicID, TableQuery[TopicsTable])(_.id, onUpdate = ForeignKeyAction.Restrict, onDelete = ForeignKeyAction.Cascade)
+  def topic = foreignKey("post_topic_fk", topicID,
+    TableQuery[TopicsTable])(_.id, onUpdate = ForeignKeyAction.Cascade, onDelete = ForeignKeyAction.Cascade)
+
+  def topicSlugFK = foreignKey("post_topic_slug_fk", topicSlug,
+    TableQuery[TopicsTable])(_.slug, onUpdate = ForeignKeyAction.Cascade, onDelete = ForeignKeyAction.Cascade)
 
   def * = (id, userID, username, topicID, topicSlug, postNumber, content, createdAt, updatedAt) <> (Post.tupled, Post.unapply)
 }

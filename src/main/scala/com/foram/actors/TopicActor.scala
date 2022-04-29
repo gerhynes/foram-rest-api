@@ -1,7 +1,7 @@
 package com.foram.actors
 
 import akka.actor.{Actor, ActorLogging, Props}
-import com.foram.dao.{AbstractPostsDao, AbstractTopicsDao}
+import com.foram.daos.{AbstractPostsDao, AbstractTopicsDao}
 import com.foram.models.{Message, Topic, TopicWithChildren}
 
 import java.util.UUID
@@ -36,79 +36,79 @@ class TopicActor(topicsDao: AbstractTopicsDao, postsDao: AbstractPostsDao) exten
 
   override def receive: Receive = {
     case GetAllTopics =>
-      println("Searching for topics")
+      log.info("Searching for topics")
       val topicsFuture = topicsDao.findAll
       val originalSender = sender
       topicsFuture.onComplete {
         case Success(topics) => originalSender ! topics.toList
         case Failure(ex) =>
-          println("Topics not found")
+          log.info("Topics not found")
           ex.printStackTrace()
           originalSender ! ex
       }
 
     case GetLatestTopics =>
-      println("Searching for latest topics")
+      log.info("Searching for latest topics")
       val topicsFuture = topicsDao.findLatest
       val originalSender = sender
       topicsFuture.onComplete {
         case Success(topics) => originalSender ! topics.toList
         case Failure(ex) =>
-          println("Latest topics not found")
+          log.info("Latest topics not found")
           ex.printStackTrace()
           originalSender ! ex
       }
 
     case GetTopicByID(id) =>
-      println(s"Finding topic with id: $id")
+      log.info(s"Finding topic with id: $id")
       val topicFuture = topicsDao.findById(id)
       val originalSender = sender
       topicFuture.onComplete {
         case Success(topic) => originalSender ! topic
         case Failure(ex) =>
-          println(s"Topic $id not found")
+          log.info(s"Topic $id not found")
           ex.printStackTrace()
           originalSender ! ex
       }
 
     case GetTopicsByCategoryID(category_id) =>
-      println(s"Finding topics with category_id: $category_id")
+      log.info(s"Finding topics with category_id: $category_id")
       val topicsFuture = topicsDao.findByCategoryID(category_id)
       val originalSender = sender
       topicsFuture.onComplete {
         case Success(topics) => originalSender ! topics.toList
         case Failure(ex) =>
-          println(s"Topics with category_id $category_id not found")
+          log.info(s"Topics with category_id $category_id not found")
           ex.printStackTrace()
           originalSender ! ex
       }
 
     case GetTopicsByUserID(user_id) =>
-      println(s"Finding topics with user_id: $user_id")
+      log.info(s"Finding topics with user_id: $user_id")
       val topicsFuture = topicsDao.findByUserID(user_id)
       val originalSender = sender
       topicsFuture.onComplete {
         case Success(topics) => originalSender ! topics.toList
         case Failure(ex) =>
-          println(s"Topics with user_id $user_id not found")
+          log.info(s"Topics with user_id $user_id not found")
           ex.printStackTrace()
           originalSender ! ex
       }
 
     case GetTopicsByUsername(username) =>
-      println(s"Finding topics with username: $username")
+      log.info(s"Finding topics with username: $username")
       val topicsFuture = topicsDao.findByUsername(username)
       val originalSender = sender
       topicsFuture.onComplete {
         case Success(topics) => originalSender ! topics.toList
         case Failure(ex) =>
-          println(s"Topics with username $username not found")
+          log.info(s"Topics with username $username not found")
           ex.printStackTrace()
           originalSender ! ex
       }
 
     case CreateTopic(newTopic) =>
-      println(s"Creating new topic $newTopic")
+      log.info(s"Creating new topic $newTopic")
 
       // Separate topic and post
       val topic = newTopic match {
@@ -120,43 +120,37 @@ class TopicActor(topicsDao: AbstractTopicsDao, postsDao: AbstractPostsDao) exten
       val originalSender = sender
 
       // Save topic and post to database
-      val topicFuture = topicsDao.create(topic)
-      val postFuture = postsDao.create(post)
+      // Chain futures to prevent foreign key constraint violation
+      val newTopicFuture = topicsDao.create(topic).flatMap(_ => postsDao.create(post))
 
-      // Get results of both futures
-      val result = for {
-        topic_id <- topicFuture
-        post_id <- postFuture
-      } yield (topic_id, post_id)
-
-      result.onComplete {
-        case Success(result) => originalSender ! topic
+      newTopicFuture.onComplete {
+        case Success(_) => originalSender ! topic
         case Failure(ex) =>
-          println(s"Unable to create topic $topic")
+          log.info(s"Unable to create topic $topic")
           ex.printStackTrace()
           originalSender ! ex
       }
 
     case UpdateTopic(id, topic) =>
-      println(s"Updating topic $id to $topic")
+      log.info(s"Updating topic $id to $topic")
       val updateFuture = topicsDao.update(id, topic)
       val originalSender = sender
       updateFuture.onComplete {
-        case Success(success) => originalSender ! Message(s"Topic $id updated")
+        case Success(_) => originalSender ! Message(s"Topic $id updated")
         case Failure(ex) =>
-          println(s"Unable to update topic $id")
+          log.info(s"Unable to update topic $id")
           ex.printStackTrace()
           originalSender ! ex
       }
 
     case DeleteTopic(id) =>
-      println(s"Removing topic id $id")
+      log.info(s"Removing topic id $id")
       val topicFuture = topicsDao.delete(id)
       val originalSender = sender
       topicFuture.onComplete {
-        case Success(success) => originalSender ! Message(s"Topic $id deleted")
+        case Success(_) => originalSender ! Message(s"Topic $id deleted")
         case Failure(ex) =>
-          println(s"Unable to delete topic $id")
+          log.info(s"Unable to delete topic $id")
           ex.printStackTrace()
           originalSender ! ex
       }

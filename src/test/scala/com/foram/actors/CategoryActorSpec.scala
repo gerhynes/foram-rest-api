@@ -4,8 +4,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
-import com.foram.actors.PostActor.ActionPerformed
-import com.foram.dao.{AbstractCategoriesDao, AbstractPostsDao, AbstractTopicsDao}
+import com.foram.daos.{AbstractCategoriesDao, AbstractPostsDao, AbstractTopicsDao}
 import com.foram.models._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterAll
@@ -30,14 +29,16 @@ class CategoryActorSpec extends TestKit(ActorSystem("MySpec"))
   }
 
   val sampleCategory: Category = Category(UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759"), "JavaScript", "javascript", UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Ask questions and share tips for JavaScript, React, Node - anything to do with the JavaScript ecosystem.", OffsetDateTime.now(), OffsetDateTime.now())
-  val sampleTopic: Topic = Topic(UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "I don't understand promises in JavaScript. Help!", "i-dont-understand-promises-in-javascript-help", UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "quince", UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759"), "JavaScript", OffsetDateTime.now(), OffsetDateTime.now())
+  val sampleTopic: Topic = Topic(UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "I don't understand promises in JavaScript. Help!", "i-dont-understand-promises-in-javascript-help", UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "quincy", UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759"), "JavaScript", OffsetDateTime.now(), OffsetDateTime.now())
   val samplePost: Post = Post(UUID.fromString("e5760f56-4bf0-4b56-bf6e-2f8c9aee8707"), UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Quincy Lars", UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "i-dont-understand-promises-in-javascript-help", 1, "Lorem ipsum dolor sit amet, consectetur adipiscing enim", OffsetDateTime.now(), OffsetDateTime.now())
-  val sampleNewTopic: TopicWithChildren = TopicWithChildren(UUID.fromString("52e787b3-adb3-44ee-9c64-d19247ffd946"), "I don't understand promises in JavaScript. Help!", "i-dont-understand-promises-in-javascript-help", UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "quince", UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759"), "JavaScript", OffsetDateTime.now(), OffsetDateTime.now(), List(samplePost))
-  val sampleNewCategory: CategoryWithChildren = CategoryWithChildren(sampleCategory.id, sampleCategory.name, sampleCategory.slug, sampleCategory.user_id, sampleCategory.description, sampleCategory.created_at, sampleCategory.updated_at, List(sampleTopic), List(samplePost))
+  val sampleNewTopic: TopicWithChildren = TopicWithChildren(sampleTopic.id, sampleTopic.title, sampleTopic.slug, sampleTopic.user_id, sampleTopic.username, sampleTopic.category_id, sampleTopic.category_name, sampleTopic.created_at, sampleTopic.updated_at, List(samplePost))
+  val sampleNewCategory: CategoryWithChildren = CategoryWithChildren(sampleCategory.id, sampleCategory.name, sampleCategory.slug, sampleCategory.user_id, sampleCategory.description, sampleCategory.created_at, sampleCategory.updated_at, List(sampleNewTopic))
+
+  val sampleUpdatedCategory = Category(UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759"), "JavaScript", "javascript", UUID.fromString("33de6e57-c57c-4451-82b9-b73ae248c672"), "Ask questions and share tips for JavaScript and its ecosystem", OffsetDateTime.now(), OffsetDateTime.now())
 
   val mockCategoriesDao: AbstractCategoriesDao = stub[AbstractCategoriesDao]
-  val mockTopicsDao = stub[AbstractTopicsDao]
-  val mockPostsDao = stub[AbstractPostsDao]
+  val mockTopicsDao: AbstractTopicsDao = stub[AbstractTopicsDao]
+  val mockPostsDao: AbstractPostsDao = stub[AbstractPostsDao]
 
   val categoryActor: ActorRef = system.actorOf(Props(new CategoryActor(mockCategoriesDao, mockTopicsDao, mockPostsDao)), "categoryActor")
 
@@ -53,43 +54,37 @@ class CategoryActorSpec extends TestKit(ActorSystem("MySpec"))
     }
 
     "respond to getCategoryByID with a single Category" in {
-      val uuid = UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759")
-      (mockCategoriesDao.findById _).when(uuid).returns(Future(sampleCategory))
+      (mockCategoriesDao.findById _).when(sampleCategory.id).returns(Future(sampleCategory))
 
-      val categoryFuture = categoryActor ? CategoryActor.GetCategoryByID(uuid)
-      categoryFuture map { category => assert(category === sampleCategory) }
+      val categoryFuture = categoryActor ? CategoryActor.GetCategoryByID(sampleCategory.id)
+
+      categoryFuture.futureValue shouldBe sampleCategory
     }
 
-    "respond to CreateCategory with confirmation" in {
+    "respond to CreateCategory with created Category" in {
       (mockCategoriesDao.create _).when(sampleCategory).returns(Future(sampleCategory.id))
+      (mockTopicsDao.create _).when(sampleTopic).returns(Future(sampleTopic.id))
+      (mockPostsDao.create _).when(samplePost).returns(Future(samplePost.id))
 
       val categoryFuture = categoryActor ? CategoryActor.CreateCategory(sampleNewCategory)
-      categoryFuture map { result =>
-        assert(result === ActionPerformed)
-        expectMsg(s"Category $result._1, topic $result._2, post $result._3 created.")
-      }
+
+      categoryFuture.futureValue shouldBe sampleCategory
     }
 
-    "respond to UpdateCategory with confirmation" in {
-      val uuid = UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759")
-      (mockCategoriesDao.update _).when(uuid, sampleCategory).returns(Future(1))
+    "respond to UpdateCategory with confirmation Message" in {
+      (mockCategoriesDao.update _).when(sampleCategory.id, sampleUpdatedCategory).returns(Future(1))
 
-      val categoryFuture = categoryActor ? CategoryActor.UpdateCategory(uuid, sampleCategory)
-      categoryFuture map { success =>
-        assert(success === ActionPerformed)
-        expectMsg(s"Category $uuid updated")
-      }
+      val categoryFuture = categoryActor ? CategoryActor.UpdateCategory(sampleCategory.id, sampleUpdatedCategory)
+
+      categoryFuture.futureValue shouldBe Message(s"Category ${sampleUpdatedCategory.id} updated")
     }
 
-    "respond to DeleteCategory with confirmation" in {
-      val uuid = UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759")
-      (mockCategoriesDao.delete _).when(uuid).returns(Future(1))
+    "respond to DeleteCategory with confirmation Message" in {
+      (mockCategoriesDao.delete _).when(sampleCategory.id).returns(Future(1))
 
-      val categoryFuture = categoryActor ? CategoryActor.DeleteCategory(uuid)
-      categoryFuture map { success =>
-        assert(success === ActionPerformed)
-        expectMsg(s"Category $uuid deleted")
-      }
+      val categoryFuture = categoryActor ? CategoryActor.DeleteCategory(sampleCategory.id)
+
+      categoryFuture.futureValue shouldBe Message(s"Category ${sampleCategory.id} deleted")
     }
   }
 }

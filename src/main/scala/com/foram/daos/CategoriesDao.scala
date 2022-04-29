@@ -1,13 +1,14 @@
-package com.foram.dao
+package com.foram.daos
 
-import com.foram.models.Category
+import com.foram.models.{CategoriesTable, Category}
+import slick.jdbc.PostgresProfile
 import slick.jdbc.PostgresProfile.api._
+import slick.lifted.TableQuery
 
 import java.util.UUID
 import scala.concurrent.Future
 
-// Singleton object for database transactions
-object CategoriesDao extends BaseDao with AbstractCategoriesDao {
+class CategoriesDao(db: PostgresProfile.backend.Database) extends AbstractCategoriesDao {
   def findAll: Future[Seq[Category]] = db.run(categories.sortBy(_.createdAt.asc).result)
 
   def findById(id: UUID): Future[Category] = db.run(categories.filter(_.id === id).result.head)
@@ -20,7 +21,9 @@ object CategoriesDao extends BaseDao with AbstractCategoriesDao {
 }
 
 // Trait for mocking purposes
-trait AbstractCategoriesDao extends BaseDao {
+trait AbstractCategoriesDao {
+  val categories = TableQuery[CategoriesTable]
+
   def findAll: Future[Seq[Category]]
 
   def findById(id: UUID): Future[Category]

@@ -1,13 +1,14 @@
-package com.foram.dao
+package com.foram.daos
 
-import com.foram.models.Post
+import com.foram.models.{Post, PostsTable}
+import slick.jdbc.PostgresProfile
 import slick.jdbc.PostgresProfile.api._
+import slick.lifted.TableQuery
 
 import java.util.UUID
 import scala.concurrent.Future
 
-// Singleton object for database transactions
-object PostsDao extends BaseDao with AbstractPostsDao {
+class PostsDao(db: PostgresProfile.backend.Database) extends AbstractPostsDao {
   def findAll: Future[Seq[Post]] = db.run(posts.sortBy(_.createdAt.asc).result)
 
   def findById(id: UUID): Future[Post] = db.run(posts.filter(_.id === id).result.head)
@@ -26,7 +27,9 @@ object PostsDao extends BaseDao with AbstractPostsDao {
 }
 
 // trait for mocking purposes
-trait AbstractPostsDao extends BaseDao {
+trait AbstractPostsDao {
+  val posts = TableQuery[PostsTable]
+
   def findAll: Future[Seq[Post]]
 
   def findById(id: UUID): Future[Post]

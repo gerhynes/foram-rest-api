@@ -18,7 +18,7 @@ import scala.util.{Failure, Success}
 
 class PostRoutes(postActor: ActorRef) {
 
-  import com.foram.JsonFormats._
+  import com.foram.json.JsonFormats._
 
   implicit val timeout = Timeout(5 seconds)
 
