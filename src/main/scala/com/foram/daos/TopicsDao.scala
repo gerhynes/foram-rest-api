@@ -1,4 +1,4 @@
-package com.foram.dao
+package com.foram.daos
 
 import com.foram.models.{Topic, TopicsTable}
 import slick.jdbc.PostgresProfile

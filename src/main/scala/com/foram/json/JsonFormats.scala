@@ -1,4 +1,4 @@
-package com.foram
+package com.foram.json
 
 import com.foram.models._
 import spray.json.{DefaultJsonProtocol, DeserializationException, JsString, JsValue, JsonFormat, RootJsonFormat, deserializationError}
@@ -14,9 +14,9 @@ object JsonFormats {
 
   // Implement support for UUIDs (not included in spray-json)
   implicit object UUIDFormat extends JsonFormat[UUID] {
-    def write(uuid: UUID) = JsString(uuid.toString)
+    def write(uuid: UUID): JsString = JsString(uuid.toString)
 
-    def read(value: JsValue) = {
+    def read(value: JsValue): UUID = {
       value match {
         case JsString(uuid) => UUID.fromString(uuid)
         case _ => throw new DeserializationException("Expected hexadecimal UUID string")
@@ -49,5 +49,3 @@ object JsonFormats {
   implicit val loginRequestFormat: RootJsonFormat[LoginRequest] = jsonFormat2(LoginRequest)
   implicit val messageFormat: RootJsonFormat[Message] = jsonFormat1(Message)
 }
-
-

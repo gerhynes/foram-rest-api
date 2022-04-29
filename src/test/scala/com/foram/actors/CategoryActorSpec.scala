@@ -4,7 +4,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
-import com.foram.dao.{AbstractCategoriesDao, AbstractPostsDao, AbstractTopicsDao}
+import com.foram.daos.{AbstractCategoriesDao, AbstractPostsDao, AbstractTopicsDao}
 import com.foram.models._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterAll
@@ -54,10 +54,9 @@ class CategoryActorSpec extends TestKit(ActorSystem("MySpec"))
     }
 
     "respond to getCategoryByID with a single Category" in {
-      val uuid = UUID.fromString("355e95e6-6f03-499a-a577-6c2f6e088759")
-      (mockCategoriesDao.findById _).when(uuid).returns(Future(sampleCategory))
+      (mockCategoriesDao.findById _).when(sampleCategory.id).returns(Future(sampleCategory))
 
-      val categoryFuture = categoryActor ? CategoryActor.GetCategoryByID(uuid)
+      val categoryFuture = categoryActor ? CategoryActor.GetCategoryByID(sampleCategory.id)
 
       categoryFuture.futureValue shouldBe sampleCategory
     }

@@ -9,7 +9,7 @@ import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import com.foram.models.Message
 
 class MainRouter(categoryActor: ActorRef, userActor: ActorRef, topicActor: ActorRef, postActor: ActorRef) {
-  import com.foram.JsonFormats._
+  import com.foram.json.JsonFormats._
 
   // Instantiate routes
   val authRoutes: Route = new AuthRoutes(userActor).routes

@@ -1,4 +1,4 @@
-package com.foram.dao
+package com.foram.daos
 
 import com.foram.auth.Auth
 import com.foram.models.{User, UsersTable}

@@ -24,7 +24,7 @@ import scala.util.{Failure, Success}
 class AuthRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with ScalatestRouteTest {
 
   import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
-  import com.foram.JsonFormats._
+  import com.foram.json.JsonFormats._
 
   implicit val timeout: Timeout = Timeout(5 seconds)
 

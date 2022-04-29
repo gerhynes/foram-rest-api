@@ -1,4 +1,4 @@
-package com.foram.dao
+package com.foram.daos
 
 import com.foram.models._
 import org.scalatest.BeforeAndAfter
@@ -86,6 +86,7 @@ class TopicsDaoSpec extends AnyWordSpec with Matchers with BeforeAndAfter with S
 
       val topicsDao = new TopicsDao(db)
 
+      // Add new topic
       db.run(topics.returning(topics.map(_.id)) += sampleNewTopic)
 
       val topicsFuture = topicsDao.findLatest

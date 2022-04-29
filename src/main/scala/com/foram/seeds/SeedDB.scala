@@ -1,4 +1,4 @@
-package com.foram.utils
+package com.foram.seeds
 
 import com.foram.auth.Auth
 import com.foram.models._
